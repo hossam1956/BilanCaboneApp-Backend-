@@ -1,0 +1,13 @@
+version: "2.27.0"
+services:
+  postgreDB:
+    image: postgres:16.3
+    container_name: postgresContainer
+    env_file:
+      - .env
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:  
