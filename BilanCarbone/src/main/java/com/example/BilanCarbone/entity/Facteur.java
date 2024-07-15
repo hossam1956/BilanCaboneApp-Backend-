@@ -1,15 +1,14 @@
 package com.example.BilanCarbone.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
+import com.example.BilanCarbone.common.BaseEntity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Classe Facteur représentant un facteur utilisé dans les calculs de l'empreinte carbone. 
@@ -19,37 +18,31 @@ import jakarta.persistence.Id;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
-
-public class Facteur {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
-	
+@SuperBuilder
+public class Facteur extends BaseEntity {
 	/**
      * Nom du facteur. C'est un nom descriptif utilisé pour identifier le facteur.
      */
-	@Column
-	private String name;
+	private String nom;
 	
 	/**
      * Unité de mesure du facteur.
      */
-	@Column
 	private String unit;
 	
 	/**
      * Valeur du facteur d'émission.
      * Cela représente la quantité d'émissions par unité d'activité (par exemple, kg de CO2 par litre).
      */
-	@Column
-	private Double emissiomFactor;
+	private BigDecimal emissionFactor;
 	
 	/**
      * Horodatage indiquant quand ce facteur a été créé.
      * Cela est utile pour le suivi et l'audit.
      */
-	@Column
-	private LocalDateTime createAt;
+	@ManyToOne
+	private Type type;
+
+
+	private Boolean active ;
 }
