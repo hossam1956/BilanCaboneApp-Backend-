@@ -6,6 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 
 public interface FacteurService {
-    PageResponse<FacteurResponse> getAllFacteurs(int page, int size,String search);
+    PageResponse<FacteurResponse> getAllFacteurs(int page, int size,String search,String... order);
     FacteurResponse getFacteurById(Long id);
 }

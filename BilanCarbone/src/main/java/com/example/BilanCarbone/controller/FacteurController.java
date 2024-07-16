@@ -23,9 +23,9 @@ public class FacteurController{
     public ResponseEntity<PageResponse<FacteurResponse>> list_all(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
-            @RequestParam(defaultValue = "")String search
-    ) {
-        return ResponseEntity.ok(facteurService.getAllFacteurs(page,size,search));
+            @RequestParam(defaultValue = "")String search,
+            @RequestParam(defaultValue = "createdDate") String[] sortBy    ) {
+        return ResponseEntity.ok(facteurService.getAllFacteurs(page,size,search,sortBy));
     }
     @GetMapping("/{id}")
     public ResponseEntity<FacteurResponse> get_item(@PathVariable Long id) {

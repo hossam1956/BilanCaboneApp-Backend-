@@ -60,17 +60,13 @@ public class TypeMapper {
                 .fils(responses)
                 .build();
     }
-    public List<TypeResponse> hierarchiqueResponse (List<Type> list){
+    public List<TypeResponse> hierarchiqueResponse (List<Type> list,List<Type> child){
         List<TypeResponse> res = null;
-        List<Type> child =null;
         if(list != null){
             res = new ArrayList<>();
-            child = new ArrayList<>();
             for(Type i: list){
                 if(i.getParent()==null){
-                    res.add(typeParentResponse(i));
-                }else{
-                    child.add(i);
+                    res.add(typeParentResponse2(i));
                 }
             }
             for (TypeResponse i: res){
@@ -79,7 +75,7 @@ public class TypeMapper {
                         continue;
                     }
                     if(i.getId().equals(j.getParent().getId())){
-                        i.getFils().add(typeParentResponse(j));
+                        i.getFils().add(typeParentResponse2(j));
                     }
                 }
             }

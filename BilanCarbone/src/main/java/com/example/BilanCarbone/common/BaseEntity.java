@@ -24,11 +24,9 @@ public class BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
-
     @UpdateTimestamp
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;

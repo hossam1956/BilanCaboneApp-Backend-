@@ -13,6 +13,9 @@ import java.util.List;
 public interface TypeRepository extends JpaRepository<Type, Long> {
     Page<Type> findAllByParentIsNull(Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndParentIsNull(String Name,Pageable pageable);
+    Page<Type> findAllByNameContainingIgnoreCase(String Name,Pageable pageable);
+
+    List<Type> findAllByParentIsNotNull();
 
     List<Type> findAllByParent(Type parent);
 }
