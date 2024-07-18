@@ -1,5 +1,4 @@
 package com.example.BilanCarbone.dto;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,11 +16,15 @@ import java.util.List;
 @AllArgsConstructor
 public class TypeResponse {
     private Long id;
-    private String name;
+    private String nom_type;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Boolean active;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String date;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<TypeResponse> fils;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Long parent;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<FacteurResponse> facteurs;
     public boolean existfils(Long id){

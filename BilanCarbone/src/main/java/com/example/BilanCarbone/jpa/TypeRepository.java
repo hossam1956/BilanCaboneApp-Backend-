@@ -16,6 +16,7 @@ public interface TypeRepository extends JpaRepository<Type, Long> {
     Page<Type> findAllByNameContainingIgnoreCase(String Name,Pageable pageable);
 
     List<Type> findAllByParentIsNotNull();
-
     List<Type> findAllByParent(Type parent);
+    Type findByName(String name);
+    List<Type> findAllByActiveIsTrue();
 }

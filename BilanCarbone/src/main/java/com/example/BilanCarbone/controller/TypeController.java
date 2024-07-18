@@ -1,11 +1,19 @@
 package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.common.PageResponse;
+import com.example.BilanCarbone.dto.FacteurRequest;
+import com.example.BilanCarbone.dto.FacteurResponse;
+import com.example.BilanCarbone.dto.TypeRequest;
 import com.example.BilanCarbone.dto.TypeResponse;
 import com.example.BilanCarbone.service.TypeService;
+import com.example.BilanCarbone.validation.OnCreate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 /**
  * @author Oussama
  **/
@@ -49,5 +57,25 @@ public class TypeController {
             res=typeService.get_type(id);
         }
         return ResponseEntity.ok(res);
+    }
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<TypeResponse> activate_facteur(@PathVariable Long id, @RequestParam(defaultValue = "false") Boolean all) {
+        if(!all){
+            return ResponseEntity.ok(typeService.activate_type(id));
+        }
+        return ResponseEntity.ok(typeService.toggle_type_detail(id,true));
+    }
+    @PutMapping("/{id}/desactivate")
+    public ResponseEntity<TypeResponse> desactivate_facteur(@PathVariable Long id) {
+        return ResponseEntity.ok(typeService.toggle_type_detail(id,false));
+    }
+    @PostMapping()
+    public ResponseEntity<TypeResponse> add_facteur(@Validated(OnCreate.class)@RequestBody TypeRequest typeRequest) {
+        return ResponseEntity.ok(typeService.add_type_detail(typeRequest));
+    }
+    @GetMapping("/all")
+    public ResponseEntity<List<TypeResponse>> list_type(
+    ) {
+        return ResponseEntity.ok(typeService.list_type());
     }
 }

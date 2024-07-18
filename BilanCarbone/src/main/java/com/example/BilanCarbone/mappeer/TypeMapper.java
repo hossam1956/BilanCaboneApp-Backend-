@@ -1,17 +1,14 @@
 package com.example.BilanCarbone.mappeer;
 
 import com.example.BilanCarbone.dto.TypeResponse;
-import com.example.BilanCarbone.entity.Facteur;
 import com.example.BilanCarbone.entity.Type;
-import com.example.BilanCarbone.jpa.TypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Oussama
@@ -25,11 +22,12 @@ public class TypeMapper {
         return  TypeResponse
                 .builder()
                 .id(type.getId())
-                .facteurs(type.getFacteurs().stream().map(facteurMapper::toFacteurResponse).toList())
-                .name(type.getName())
+                .facteurs(type.getFacteurs() != null ? type.getFacteurs().stream().map(facteurMapper::toFacteurResponse).collect(Collectors.toList()) : null)
+                .nom_type(type.getName())
                 .active(type.getActive())
                 .date(type.getCreatedDate().format(formatter))
                 .fils(new ArrayList<>())
+                .parent(null)
                 .build();
     }
     public TypeResponse typeParentResponse2(Type type){
@@ -37,9 +35,22 @@ public class TypeMapper {
                 .builder()
                 .id(type.getId())
                 .facteurs(null)
-                .name(type.getName())
+                .nom_type(type.getName())
+                .parent(type.getParent()!=null?type.getParent().getId():null)
                 .active(type.getActive())
                 .date(type.getCreatedDate().format(formatter))
+                .fils(new ArrayList<>())
+                .build();
+    }
+    public TypeResponse typeParentResponse3(Type type){
+        return  TypeResponse
+                .builder()
+                .id(type.getId())
+                .facteurs(null)
+                .nom_type(type.getName())
+                .parent(null)
+                .active(null)
+                .date(null)
                 .fils(new ArrayList<>())
                 .build();
     }
@@ -54,7 +65,7 @@ public class TypeMapper {
                 .builder()
                 .id(type.getId())
                 .facteurs(null)
-                .name(type.getName())
+                .nom_type(type.getName())
                 .active(type.getActive())
                 .date(type.getCreatedDate().format(formatter))
                 .fils(responses)
@@ -66,7 +77,7 @@ public class TypeMapper {
             res = new ArrayList<>();
             for(Type i: list){
                 if(i.getParent()==null){
-                    res.add(typeParentResponse2(i));
+                    res.add(typeParentResponse3(i));
                 }
             }
             for (TypeResponse i: res){
@@ -75,14 +86,12 @@ public class TypeMapper {
                         continue;
                     }
                     if(i.getId().equals(j.getParent().getId())){
-                        i.getFils().add(typeParentResponse2(j));
+                        i.getFils().add(typeParentResponse3(j));
                     }
                 }
             }
             return res;
         }
-
-
         return res;
     }
 }

@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class FacteurResponse {
     private Long id;
-    private String nom;
+    private String nom_facteur;
     private String unit;
     private BigDecimal emissionFactor;
     private Boolean active ;

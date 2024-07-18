@@ -28,7 +28,8 @@ public class Facteur extends BaseEntity {
 	/**
      * Unité de mesure du facteur.
      */
-	private String unit;
+	@Enumerated(EnumType.STRING)
+	private Unite unit;
 	
 	/**
      * Valeur du facteur d'émission.
