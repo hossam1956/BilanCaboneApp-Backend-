@@ -20,8 +20,4 @@ public interface TypeService {
     TypeResponse toggle_type_detail(Long id, boolean active);
     TypeResponse add_type_detail(TypeRequest request);
     List<TypeResponse> list_type();
-
-
-
-
 }

@@ -39,16 +39,16 @@ public class TypeServiceimplement implements TypeService{
         Pageable pe = PageRequest.of(page, size,sort);
         Page<Type> respage=null;
         if(search != null && !search.isEmpty()) {
-            respage=typeRepository.findAllByNameContainingIgnoreCase(search,pe);
+            respage=typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search,pe);
         }else{
-            respage=typeRepository.findAll(pe);
+            respage=typeRepository.findAllByIsDeletedIsNull(pe);
         }
         return getTypeResponsePageResponse(respage);
     }
     @Override
     public PageResponse<TypeResponse> list_all_detail(int page , int size , String search,String... order){
         Page<Type> respage=pagesorted(page, size, search, order);
-        List<Type> child=typeRepository.findAllByParentIsNotNull();
+        List<Type> child=typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
         List<TypeResponse> list=typeMapper.hierarchiqueResponse(respage.stream().toList(),child);
         return PageResponse.<TypeResponse>builder()
            .content(list)
@@ -69,7 +69,7 @@ public class TypeServiceimplement implements TypeService{
     @Override
     public TypeResponse get_type_detail(Long id) {
         Type res=findbyid(id);
-        List<Type> list =typeRepository.findAllByParent(res);
+        List<Type> list =typeRepository.findAllByParentAndIsDeletedIsNull(res);
         if(!list.isEmpty()){
             return typeMapper.typeParentResponse(res,list);
         }
@@ -81,7 +81,7 @@ public class TypeServiceimplement implements TypeService{
         if(res.getParent()!=null){
             res= res.getParent();
         }
-        List<Type> list =typeRepository.findAllByParent(res);
+        List<Type> list =typeRepository.findAllByParentAndIsDeletedIsNull(res);
         if(!list.isEmpty()){
             return typeMapper.typeParentResponse(res,list);
         }
@@ -110,13 +110,13 @@ public class TypeServiceimplement implements TypeService{
 
     @Override
     public List<TypeResponse> list_type() {
-        List<Type> list=typeRepository.findAllByActiveIsTrue();
-        List<Type> child=typeRepository.findAllByParentIsNotNull();
+        List<Type> list=typeRepository.findAllByActiveIsTrueAndIsDeletedIsNull();
+        List<Type> child=typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
         return typeMapper.hierarchiqueResponse(list.stream().toList(),child);
     }
 
     private Type add_type(TypeRequest request,Type parent){
-        Type type=typeRepository.findByName(request.nom_type());
+        Type type=typeRepository.findByNameAndIsDeletedIsNull(request.nom_type());
         if (type !=null) {
             throw new IllegalArgumentException("type avec nom " + type.getName() + " deja exists.");
         }
@@ -163,7 +163,7 @@ public class TypeServiceimplement implements TypeService{
                 }
             }
         }
-        List<Type> childTypes = typeRepository.findAllByParent(type);
+        List<Type> childTypes = typeRepository.findAllByParentAndIsDeletedIsNull(type);
         if (childTypes != null&& !childTypes.isEmpty()) {
             for (Type childType : childTypes) {
                 if (childType.getActive() != activate) {
@@ -177,9 +177,9 @@ public class TypeServiceimplement implements TypeService{
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
         Pageable pe = PageRequest.of(page, size,sort);
         if(!search.isEmpty()) {
-            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNull(search,pe);
+            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search,pe);
         }
-        return typeRepository.findAllByParentIsNull(pe);
+        return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pe);
     }
     private PageResponse<TypeResponse> getTypeResponsePageResponse(Page<Type> respage) {
         List<TypeResponse> res=respage.stream().map(typeMapper::typeParentResponse2).toList();
@@ -194,9 +194,11 @@ public class TypeServiceimplement implements TypeService{
                 .build();
     }
     private Type findbyid(Long id) {
-        return typeRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Type not found with id: " + id)
-        );
+        Type t= typeRepository.findByIdAndIsDeletedIsNull(id);
+        if (t==null){
+            throw new  EntityNotFoundException("Type not found with id: " + id);
+        }
+        return t;
     }
     private int getDepth(Type type) {
         int depth = 0;

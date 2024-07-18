@@ -62,5 +62,27 @@ public class FacteurController{
             ) {
         return ResponseEntity.ok(facteurService.list_facteur(parent));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<FacteurResponse> delete_facteur(@PathVariable Long id) {
+        return ResponseEntity.ok(facteurService.delete_facteur(id));
+    }
+    @DeleteMapping("/trash/{id}")
+    public ResponseEntity<FacteurResponse> delete_force_facteur(@PathVariable Long id) {
+        return ResponseEntity.ok(facteurService.delete_force_facteur(id));
+    }
+    @PostMapping("/trash/{id}")
+    public ResponseEntity<FacteurResponse> recovery_facteur(@PathVariable Long id) {
+        return ResponseEntity.ok(facteurService.recovery_facteur(id));
+    }
+    @GetMapping("/trash")
+    public ResponseEntity<PageResponse<FacteurResponse>> list_all_facteur(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(defaultValue = "")String search,
+            @RequestParam(defaultValue = "createdDate") String[] sortBy
+    ) {
+        return ResponseEntity.ok(facteurService.get_All_deleted_Facteurs(page,size,search,sortBy));
+    }
+
 }
 

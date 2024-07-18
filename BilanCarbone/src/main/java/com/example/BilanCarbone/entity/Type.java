@@ -23,6 +23,6 @@ public class Type extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Type parent;
     private Boolean active ;
-    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Facteur> facteurs;
 }

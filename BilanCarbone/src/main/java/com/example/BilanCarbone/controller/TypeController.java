@@ -48,9 +48,9 @@ public class TypeController {
 
             ) {
         TypeResponse res =null;
-        if(detail){
+        if(all){
             res=typeService.get_type_detail(id);
-        } else if (all) {
+        } else if (detail) {
             res = typeService.get_type_all(id);
         }
         else{

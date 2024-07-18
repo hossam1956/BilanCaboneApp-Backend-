@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-@MappedSuperclass //is used to designate a class whose mapping information is applied to the entities that inherit from it
+@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public class BaseEntity {
     @Id
@@ -30,4 +30,6 @@ public class BaseEntity {
     @UpdateTimestamp
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
+    @Column(columnDefinition = "timestamp default null")
+    private LocalDateTime isDeleted;
 }

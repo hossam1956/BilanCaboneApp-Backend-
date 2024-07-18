@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -37,9 +38,9 @@ public class FacteurServiceimplement implements FacteurService{
         Pageable pe = PageRequest.of(ge, size,sort);
         Page<Facteur> page=null;
         if(!search.isEmpty()) {
-            page=facteurRepository.findAllByNomContainingIgnoreCase(search.toLowerCase().trim(),pe);
+            page=facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(),pe);
         }else {
-            page=facteurRepository.findAll(pe);
+            page=facteurRepository.findAllByIsDeletedIsNull(pe);
         }
         List<FacteurResponse> res=page.stream().map(facteurMapper::toFacteurResponse).toList();
         return PageResponse.<FacteurResponse>builder()
@@ -80,7 +81,7 @@ public class FacteurServiceimplement implements FacteurService{
     @Transactional
     @Override
     public FacteurResponse addFacteur(FacteurRequest request,Type type) {
-        Facteur existingFacteur = facteurRepository.findByNom(request.nom_facteur());
+        Facteur existingFacteur = facteurRepository.findByNomAndIsDeletedIsNull(request.nom_facteur());
         if (existingFacteur !=null) {
             throw new IllegalArgumentException("Facteur avec nom " + request.nom_facteur() + " deja exists.");
         }
@@ -96,7 +97,7 @@ public class FacteurServiceimplement implements FacteurService{
     }
 
     @Override
-    public List<String> getType() {
+    public List<String>     getType() {
         return Unite.getAllUnits();
     }
 
@@ -107,18 +108,66 @@ public class FacteurServiceimplement implements FacteurService{
             Type type = typeRepository.findById(facteurId).orElseThrow(
                     () -> new EntityNotFoundException("type not found with id: " +facteurId)
             );
-             list = facteurRepository.findAllByActiveIsTrueAndType(type);
+             list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNull(type);
         }else{
-            list = facteurRepository.findAllByActiveIsTrue();
+            list = facteurRepository.findAllByActiveIsTrueAndIsDeletedIsNull();
         }
         return list.stream().map(facteurMapper::toFacteurResponse).toList();
     }
 
-    private Facteur findbyid(Long id) {
-        return facteurRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Facteur not found with id: " + id)
-        );
+    @Override
+    public FacteurResponse delete_facteur(Long facteurId) {
+        Facteur t=findbyid(facteurId);
+        if(t.getIsDeleted() !=null){
+          throw new OperationNotPermittedException("le facteur "+facteurId+" déjà supprimé");
+        }
+        t.setIsDeleted(LocalDateTime.now());
+        return facteurMapper.toFacteurResponse(facteurRepository.save(t));
     }
+
+    @Override
+    public FacteurResponse delete_force_facteur(Long facteurId) {
+        Facteur t=findbyid_deleted(facteurId);
+        if(t.getIsDeleted() ==null){
+            throw new OperationNotPermittedException("le facteur "+facteurId+" n'est pas supprimé");
+        }
+        facteurRepository.delete(t);
+        return facteurMapper.toFacteurResponse(t);
+    }
+
+    @Override
+    public FacteurResponse recovery_facteur(Long facteurId) {
+        Facteur t=findbyid_deleted(facteurId);
+        if(t.getIsDeleted() ==null){
+            throw new OperationNotPermittedException("le facteur "+facteurId+" n'est pas supprimé");
+        }
+        t.setIsDeleted(null);
+        return facteurMapper.toFacteurResponse(facteurRepository.save(t));
+    }
+
+    @Override
+    public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int ge, int size, String search, String... order) {
+        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
+        Pageable pe = PageRequest.of(ge, size,sort);
+        Page<Facteur> page=null;
+        if(!search.isEmpty()) {
+            page=facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(search.toLowerCase().trim(),pe);
+        }else {
+            page=facteurRepository.findAllByIsDeletedNotNull(pe);
+        }
+        List<FacteurResponse> res=page.stream().map(facteurMapper::toFacteurResponse).toList();
+        return PageResponse.<FacteurResponse>builder()
+                .content(res)
+                .number(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
+
+
     @Override
     public FacteurResponse tooglefactecurtoggleActivation(Long id,boolean activate){
         Facteur facteur=findbyid(id);
@@ -135,6 +184,19 @@ public class FacteurServiceimplement implements FacteurService{
         facteur.setActive(activate);
         return facteurMapper.toFacteurResponse(facteurRepository.save(facteur));
     }
-
+    private Facteur findbyid(Long id) {
+        Facteur f=facteurRepository.findByIdAndIsDeletedIsNull(id);
+        if(f==null){
+            throw new EntityNotFoundException("facteur not found with id: " +id);
+        }
+        return f;
+    }
+    private Facteur findbyid_deleted(Long id) {
+        Facteur f=facteurRepository.findByIdAndIsDeletedNotNull(id);
+        if(f==null){
+            throw new EntityNotFoundException("facteur not found with id: " +id);
+        }
+        return f;
+    }
 
 }

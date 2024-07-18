@@ -16,6 +16,11 @@ public interface FacteurService {
     FacteurResponse addFacteur(FacteurRequest request, Type type);
     List<String> getType();
     List<FacteurResponse> list_facteur(Long facteurId);
+    FacteurResponse delete_facteur(Long facteurId);
+    FacteurResponse delete_force_facteur(Long facteurId);
+    FacteurResponse recovery_facteur(Long facteurId);
+    PageResponse<FacteurResponse> get_All_deleted_Facteurs(int page, int size,String search,String... order);
+
 
 
 }

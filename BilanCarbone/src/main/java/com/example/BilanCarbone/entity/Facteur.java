@@ -41,9 +41,9 @@ public class Facteur extends BaseEntity {
      * Horodatage indiquant quand ce facteur a été créé.
      * Cela est utile pour le suivi et l'audit.
      */
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "type_id")
 	private Type type;
-
 
 	private Boolean active ;
 }
