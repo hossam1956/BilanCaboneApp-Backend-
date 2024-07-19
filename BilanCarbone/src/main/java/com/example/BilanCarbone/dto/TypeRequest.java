@@ -12,7 +12,9 @@ public record TypeRequest(
         @NotBlank(groups = OnCreate.class, message = "Nom must not be blank")
         String nom_type,
         List<TypeRequest> types,
-        List<FacteurRequest> facteurs
+        List<FacteurRequest> facteurs,
+        Boolean active,
+        Long id
 ) {
 
 }

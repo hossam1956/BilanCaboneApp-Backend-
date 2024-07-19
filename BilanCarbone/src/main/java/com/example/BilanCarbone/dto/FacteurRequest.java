@@ -16,6 +16,7 @@ public record FacteurRequest(
         String unit,
         @NotNull(groups = OnCreate.class, message = "Emission Factor must not be null")
         BigDecimal emissionFactor,
-        Boolean active
+        Boolean active,
+        Long id
 ) {
 }

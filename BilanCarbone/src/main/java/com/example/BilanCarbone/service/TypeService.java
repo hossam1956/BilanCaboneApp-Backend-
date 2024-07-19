@@ -20,4 +20,10 @@ public interface TypeService {
     TypeResponse toggle_type_detail(Long id, boolean active);
     TypeResponse add_type_detail(TypeRequest request);
     List<TypeResponse> list_type();
+    TypeResponse update_type_detail(Long id,TypeRequest request);
+    TypeResponse delete_type_detail(Long id);
+    TypeResponse force_delete_type(Long id);
+    TypeResponse recovery_delete_all(Long id);
+    PageResponse<TypeResponse> list_all_detail_trash(int page , int size , String search,String... order);
+
 }

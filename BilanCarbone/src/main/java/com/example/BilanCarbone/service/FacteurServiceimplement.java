@@ -32,6 +32,7 @@ public class FacteurServiceimplement implements FacteurService{
     private final FacteurRepository facteurRepository;
     private final TypeRepository typeRepository;
     private final FacteurMapper facteurMapper;
+
     @Override
     public PageResponse<FacteurResponse> getAllFacteurs(int ge,int size,String search,String... order) {
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
@@ -97,7 +98,7 @@ public class FacteurServiceimplement implements FacteurService{
     }
 
     @Override
-    public List<String>     getType() {
+    public List<String>  getType() {
         return Unite.getAllUnits();
     }
 
@@ -114,7 +115,6 @@ public class FacteurServiceimplement implements FacteurService{
         }
         return list.stream().map(facteurMapper::toFacteurResponse).toList();
     }
-
     @Override
     public FacteurResponse delete_facteur(Long facteurId) {
         Facteur t=findbyid(facteurId);
@@ -124,7 +124,6 @@ public class FacteurServiceimplement implements FacteurService{
         t.setIsDeleted(LocalDateTime.now());
         return facteurMapper.toFacteurResponse(facteurRepository.save(t));
     }
-
     @Override
     public FacteurResponse delete_force_facteur(Long facteurId) {
         Facteur t=findbyid_deleted(facteurId);
@@ -134,17 +133,18 @@ public class FacteurServiceimplement implements FacteurService{
         facteurRepository.delete(t);
         return facteurMapper.toFacteurResponse(t);
     }
-
     @Override
     public FacteurResponse recovery_facteur(Long facteurId) {
         Facteur t=findbyid_deleted(facteurId);
         if(t.getIsDeleted() ==null){
-            throw new OperationNotPermittedException("le facteur "+facteurId+" n'est pas supprimé");
+            throw new OperationNotPermittedException("le facteur "+t.getNom() +" n'est pas supprimé");
+        }
+        if(t.getType()!=null &&t.getType().getIsDeleted()!=null){
+            throw new OperationNotPermittedException("vous devez d'abord récupérer le type son nom :"+t.getNom()+", et son id :"+t.getId());
         }
         t.setIsDeleted(null);
         return facteurMapper.toFacteurResponse(facteurRepository.save(t));
     }
-
     @Override
     public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int ge, int size, String search, String... order) {
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
@@ -166,8 +166,6 @@ public class FacteurServiceimplement implements FacteurService{
                 .last(page.isLast())
                 .build();
     }
-
-
     @Override
     public FacteurResponse tooglefactecurtoggleActivation(Long id,boolean activate){
         Facteur facteur=findbyid(id);

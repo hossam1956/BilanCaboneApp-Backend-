@@ -78,4 +78,29 @@ public class TypeController {
     ) {
         return ResponseEntity.ok(typeService.list_type());
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<TypeResponse> delete_type(@PathVariable Long id) {
+        return ResponseEntity.ok(typeService.delete_type_detail(id));
+    }
+    @DeleteMapping("/trash/{id}")
+    public ResponseEntity<TypeResponse> delete_force_type(@PathVariable Long id) {
+        return ResponseEntity.ok(typeService.force_delete_type(id));
+    }
+    @PostMapping("/trash/{id}")
+    public ResponseEntity<TypeResponse> recovery_type(@PathVariable Long id) {
+        return ResponseEntity.ok(typeService.recovery_delete_all(id));
+    }
+    @GetMapping("/trash")
+    public ResponseEntity<PageResponse<TypeResponse>> list_all_type_trash(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(defaultValue = "")String search,
+            @RequestParam(defaultValue = "createdDate") String[] sortBy
+    ) {
+        return ResponseEntity.ok(typeService.list_all_detail_trash(page,size,search,sortBy));
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<TypeResponse> update_type(@PathVariable Long id, @RequestBody TypeRequest typeRequest) {
+        return ResponseEntity.ok(typeService.update_type_detail(id,typeRequest));
+    }
 }
