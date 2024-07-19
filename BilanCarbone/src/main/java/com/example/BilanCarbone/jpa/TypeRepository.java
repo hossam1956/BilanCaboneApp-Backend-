@@ -1,6 +1,5 @@
 package com.example.BilanCarbone.jpa;
 
-import com.example.BilanCarbone.entity.Facteur;
 import com.example.BilanCarbone.entity.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

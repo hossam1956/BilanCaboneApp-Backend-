@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,138 +24,278 @@ import java.util.stream.Collectors;
 /**
  * @author Oussama
  **/
+/**
+ * Implémentation des services liés aux entités Type.
+ *
+ * @author Oussama
+ */
 @Service
 @RequiredArgsConstructor
-public class TypeServiceimplement implements TypeService{
+public class TypeServiceimplement implements TypeService {
+
     private final TypeRepository typeRepository;
     private final TypeMapper typeMapper;
     private final FacteurRepository facteurRepository;
     private final FacteurService facteurService;
+
+    /**
+     * Liste des types parent avec pagination, tri et recherche.
+     *
+     * @param page Numéro de la page à récupérer (commence à 0).
+     * @param size Nombre d'éléments par page.
+     * @param search Critère de recherche dans le nom des types.
+     * @param order Ordre de tri des résultats.
+     * @return PageResponse<TypeResponse> Liste paginée des types parent.
+     */
     @Override
-    public PageResponse<TypeResponse> list_parent(int page , int size , String search,String... order) {
-        Page<Type> respage=pagesorted(page, size, search, order);
+    public PageResponse<TypeResponse> list_parent(int page, int size, String search, String... order) {
+        Page<Type> respage = pagesorted(page, size, search, order);
         return getTypeResponsePageResponse(respage);
     }
+
+    /**
+     * Liste de tous les types avec pagination, tri et recherche.
+     *
+     * @param page Numéro de la page à récupérer (commence à 0).
+     * @param size Nombre d'éléments par page.
+     * @param search Critère de recherche dans le nom des types.
+     * @param order Ordre de tri des résultats.
+     * @return PageResponse<TypeResponse> Liste paginée de tous les types.
+     */
     @Override
     public PageResponse<TypeResponse> list_all(int page, int size, String search, String... order) {
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size,sort);
-        Page<Type> respage=null;
-        if(search != null && !search.isEmpty()) {
-            respage=typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search,pe);
-        }else{
-            respage=typeRepository.findAllByIsDeletedIsNull(pe);
+        Pageable pe = PageRequest.of(page, size, sort);
+        Page<Type> respage = null;
+        if (search != null && !search.isEmpty()) {
+            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pe);
+        } else {
+            respage = typeRepository.findAllByIsDeletedIsNull(pe);
         }
         return getTypeResponsePageResponse(respage);
     }
+
+    /**
+     * Liste détaillée de tous les types avec pagination, tri et recherche.
+     *
+     * @param page Numéro de la page à récupérer (commence à 0).
+     * @param size Nombre d'éléments par page.
+     * @param search Critère de recherche dans le nom des types.
+     * @param order Ordre de tri des résultats.
+     * @return PageResponse<TypeResponse> Liste paginée des types avec détails.
+     */
     @Override
-    public PageResponse<TypeResponse> list_all_detail(int page , int size , String search,String... order){
-        Page<Type> respage=pagesorted(page, size, search, order);
-        List<Type> child=typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
-        List<TypeResponse> list=typeMapper.hierarchiqueResponse(respage.stream().toList(),child);
+    public PageResponse<TypeResponse> list_all_detail(int page, int size, String search, String... order) {
+        Page<Type> respage = pagesorted(page, size, search, order);
+        List<Type> child = typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
+        List<TypeResponse> list = typeMapper.hierarchiqueResponse(respage.stream().toList(), child);
         return PageResponse.<TypeResponse>builder()
-           .content(list)
-           .number(respage.getNumber())
-           .size(respage.getSize())
-           .totalElements(respage.getTotalElements())
-           .totalPages(respage.getTotalPages())
-           .first(respage.isFirst())
-           .last(respage.isLast())
-           .build();
+                .content(list)
+                .number(respage.getNumber())
+                .size(respage.getSize())
+                .totalElements(respage.getTotalElements())
+                .totalPages(respage.getTotalPages())
+                .first(respage.isFirst())
+                .last(respage.isLast())
+                .build();
     }
 
+    /**
+     * Récupère les détails d'un type par son ID.
+     *
+     * @param id Identifiant du type à récupérer.
+     * @return TypeResponse Détails du type.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     public TypeResponse get_type(Long id) {
-        Type res=findbyid(id);
+        Type res = findbyid(id);
         return typeMapper.typeParentResponse2(res);
     }
+
+    /**
+     * Récupère les détails d'un type avec ses enfants.
+     *
+     * @param id Identifiant du type à récupérer.
+     * @return TypeResponse Détails du type avec ses enfants.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     public TypeResponse get_type_detail(Long id) {
-        Type res=findbyid(id);
-        List<Type> list =typeRepository.findAllByParentAndIsDeletedIsNull(res);
-        if(!list.isEmpty()){
-            return typeMapper.typeParentResponse(res,list);
+        Type res = findbyid(id);
+        List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
+        if (!list.isEmpty()) {
+            return typeMapper.typeParentResponse(res, list);
         }
         return typeMapper.typeParentResponse(res);
     }
+
+    /**
+     * Récupère tous les types en remontant jusqu'au type racine si nécessaire.
+     *
+     * @param id Identifiant du type à récupérer.
+     * @return TypeResponse Détails du type ou de son parent racine.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     public TypeResponse get_type_all(Long id) {
-        Type res=findbyid(id);
-        if(res.getParent()!=null){
-            res= res.getParent();
+        Type res = findbyid(id);
+        if (res.getParent() != null) {
+            res = res.getParent();
         }
-        List<Type> list =typeRepository.findAllByParentAndIsDeletedIsNull(res);
-        if(!list.isEmpty()){
-            return typeMapper.typeParentResponse(res,list);
+        List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
+        if (!list.isEmpty()) {
+            return typeMapper.typeParentResponse(res, list);
         }
         return typeMapper.typeParentResponse(res);
     }
+
+    /**
+     * Active un type en le rétablissant s'il était désactivé.
+     *
+     * @param id Identifiant du type à activer.
+     * @return TypeResponse Détails du type activé.
+     * @throws OperationNotPermittedException Si le type est déjà activé.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     public TypeResponse activate_type(Long id) {
-        Type type=findbyid(id);
-        if(type.getActive()) {
-            throw new OperationNotPermittedException("Le type "+id+" a déjà été désactivé");
+        Type type = findbyid(id);
+        if (type.getActive()) {
+            throw new OperationNotPermittedException("Le type " + id + " a déjà été désactivé");
         }
 
         type.setActive(true);
         return typeMapper.typeParentResponse2(typeRepository.save(type));
     }
+
+    /**
+     * Active ou désactive un type et ses enfants.
+     *
+     * @param id Identifiant du type à modifier.
+     * @param activate Boolean indiquant si le type doit être activé (true) ou désactivé (false).
+     * @return TypeResponse Détails du type après activation/désactivation.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     public TypeResponse toggle_type_detail(Long id, boolean activate) {
-        Type type =findbyid(id);
-        return typeMapper.typeParentResponse(toggleTypeAndChildren(type,activate));
+        Type type = findbyid(id);
+        return typeMapper.typeParentResponse(toggleTypeAndChildren(type, activate));
     }
+
+    /**
+     * Ajoute un type détaillé en utilisant les informations fournies.
+     *
+     * @param request Requête contenant les détails du type à ajouter.
+     * @return TypeResponse Détails du type ajouté.
+     */
     @Override
     @Transactional
     public TypeResponse add_type_detail(TypeRequest request) {
-        Long id=add_type(request,null).getId();
+        Long id = add_type(request, null).getId();
         return get_type_detail(id);
     }
 
+    /**
+     * Liste de tous les types actifs.
+     *
+     * @return List<TypeResponse> Liste des types actifs.
+     */
     @Override
     public List<TypeResponse> list_type() {
-        List<Type> list=typeRepository.findAllByActiveIsTrueAndIsDeletedIsNull();
-        List<Type> child=typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
-        return typeMapper.hierarchiqueResponse(list.stream().toList(),child);
+        List<Type> list = typeRepository.findAllByActiveIsTrueAndIsDeletedIsNull();
+        List<Type> child = typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
+        return typeMapper.hierarchiqueResponse(list.stream().toList(), child);
     }
 
+    /**
+     * Met à jour les détails d'un type.
+     *
+     * @param id Identifiant du type à mettre à jour.
+     * @param request Requête contenant les nouvelles informations du type.
+     * @return TypeResponse Détails du type mis à jour.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     @Transactional
     public TypeResponse update_type_detail(Long id, TypeRequest request) {
-        Type type =updateType(id,request,null);
+        Type type = updateType(id, request, null);
         return typeMapper.typeParentResponse(findbyid(type.getId()));
     }
 
+    /**
+     * Supprime un type en le marquant comme supprimé, et supprime également ses enfants.
+     *
+     * @param id Identifiant du type à supprimer.
+     * @return TypeResponse Détails du type supprimé.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     @Transactional
     public TypeResponse delete_type_detail(Long id) {
-        Type type=toggle_delete(id,true);
+        Type type = toggle_delete(id, true);
         return typeMapper.typeParentResponse(findbyid(type.getId()));
     }
+
+    /**
+     * Supprime de force un type et ses enfants, même si le type est déjà marqué comme supprimé.
+     *
+     * @param id Identifiant du type à supprimer de force.
+     * @return TypeResponse Détails du type supprimé de force.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     public TypeResponse force_delete_type(Long id) {
-        Type type = find_deleted_byid(id);  // Assuming findbyid is a method to retrieve the Type by its ID
-         deleteTypeAndChildren(type);
+        Type type = find_deleted_byid(id);
+        deleteTypeAndChildren(type);
         return typeMapper.typeParentResponse(type);
     }
+
+    /**
+     * Récupère un type supprimé ainsi que ses enfants.
+     *
+     * @param id Identifiant du type à récupérer.
+     * @return TypeResponse Détails du type récupéré.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     @Override
     @Transactional
     public TypeResponse recovery_delete_all(Long id) {
-        Type type=toggle_delete(id,false);
+        Type type = toggle_delete(id, false);
         return typeMapper.typeParentResponse(findbyid(type.getId()));
     }
+
+    /**
+     * Liste des types supprimés avec pagination, tri et recherche.
+     *
+     * @param page Numéro de la page à récupérer (commence à 0).
+     * @param size Nombre d'éléments par page.
+     * @param search Critère de recherche dans le nom des types supprimés.
+     * @param order Ordre de tri des résultats.
+     * @return PageResponse<TypeResponse> Liste paginée des types supprimés.
+     */
     @Override
     public PageResponse<TypeResponse> list_all_detail_trash(int page, int size, String search, String... order) {
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size,sort);
-        Page<Type> respage=null;
-        if(search!=null && !search.isEmpty()){
-            respage=typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNotNull(search,pe);
-        }else {
-            respage=typeRepository.findAllByIsDeletedNotNull(pe);
+        Pageable pe = PageRequest.of(page, size, sort);
+        Page<Type> respage = null;
+        if (search != null && !search.isEmpty()) {
+            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNotNull(search, pe);
+        } else {
+            respage = typeRepository.findAllByIsDeletedNotNull(pe);
         }
         return getTypeResponsePageResponse(respage);
     }
+
+    /**
+     * Basculer l'état de suppression d'un type et de ses enfants.
+     *
+     * @param id Identifiant du type à modifier.
+     * @param deleted Boolean indiquant si le type doit être supprimé (true) ou récupéré (false).
+     * @return Type Le type modifié.
+     * @throws OperationNotPermittedException Si l'opération n'est pas autorisée.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     private Type toggle_delete(Long id, Boolean deleted) {
         Type type = null;
         if (deleted) {
@@ -195,9 +334,18 @@ public class TypeServiceimplement implements TypeService{
 
         return type;
     }
-    private Type add_type(TypeRequest request,Type parent){
-        Type type=typeRepository.findByNameAndIsDeletedIsNull(request.nom_type());
-        if (type !=null) {
+
+    /**
+     * Ajoute un type et ses facteurs, ainsi que ses enfants si spécifié.
+     *
+     * @param request Requête contenant les détails du type à ajouter.
+     * @param parent Type parent du nouveau type.
+     * @return Type Le type ajouté.
+     * @throws IllegalArgumentException Si un type avec le même nom existe déjà ou si la profondeur dépasse deux niveaux.
+     */
+    private Type add_type(TypeRequest request, Type parent) {
+        Type type = typeRepository.findByNameAndIsDeletedIsNull(request.nom_type());
+        if (type != null) {
             throw new IllegalArgumentException("type avec nom " + type.getName() + " deja exists.");
         }
         int depth = getDepth(parent);
@@ -211,14 +359,14 @@ public class TypeServiceimplement implements TypeService{
                 .build();
         type = typeRepository.save(type);
 
-        if(request.facteurs()!=null && !request.facteurs().isEmpty()){
-            for(FacteurRequest i : request.facteurs()){
+        if (request.facteurs() != null && !request.facteurs().isEmpty()) {
+            for (FacteurRequest i : request.facteurs()) {
                 Facteur facteur = Facteur.builder()
                         .nom(i.nom_facteur())
                         .unit(Unite.fromString(i.unit()))
                         .emissionFactor(i.emissionFactor())
                         .type(type)
-                        .active((i.active()!=null)?i.active():true)
+                        .active((i.active() != null) ? i.active() : true)
                         .build();
                 facteurRepository.save(facteur);
             }
@@ -230,21 +378,29 @@ public class TypeServiceimplement implements TypeService{
         }
         return type;
     }
+
+    /**
+     * Active ou désactive un type et ses enfants.
+     *
+     * @param type Type à modifier.
+     * @param activate Boolean indiquant si le type doit être activé (true) ou désactivé (false).
+     * @return Type Le type modifié.
+     */
     private Type toggleTypeAndChildren(Type type, boolean activate) {
-        if(type.getActive()!=activate){
+        if (type.getActive() != activate) {
             type.setActive(activate);
             typeRepository.save(type);
         }
-        if(type.getFacteurs()!=null&&!type.getFacteurs().isEmpty()){
+        if (type.getFacteurs() != null && !type.getFacteurs().isEmpty()) {
             for (Facteur i : type.getFacteurs()) {
-                if(i.getActive()!=activate){
+                if (i.getActive() != activate) {
                     i.setActive(activate);
                     facteurRepository.save(i);
                 }
             }
         }
         List<Type> childTypes = typeRepository.findAllByParentAndIsDeletedIsNull(type);
-        if (childTypes != null&& !childTypes.isEmpty()) {
+        if (childTypes != null && !childTypes.isEmpty()) {
             for (Type childType : childTypes) {
                 if (childType.getActive() != activate) {
                     toggleTypeAndChildren(childType, activate);
@@ -253,16 +409,33 @@ public class TypeServiceimplement implements TypeService{
         }
         return type;
     }
+
+    /**
+     * Obtient une page de types triés en fonction de la recherche et du tri.
+     *
+     * @param page Numéro de la page à récupérer (commence à 0).
+     * @param size Nombre d'éléments par page.
+     * @param search Critère de recherche dans le nom des types.
+     * @param order Ordre de tri des résultats.
+     * @return Page<Type> Page des types triés.
+     */
     private Page<Type> pagesorted(int page, int size, String search, String[] order) {
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size,sort);
-        if(!search.isEmpty()) {
-            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search,pe);
+        Pageable pe = PageRequest.of(page, size, sort);
+        if (!search.isEmpty()) {
+            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pe);
         }
         return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pe);
     }
+
+    /**
+     * Convertit une page de types en une réponse paginée de TypeResponse.
+     *
+     * @param respage Page de types à convertir.
+     * @return PageResponse<TypeResponse> Réponse paginée des types.
+     */
     private PageResponse<TypeResponse> getTypeResponsePageResponse(Page<Type> respage) {
-        List<TypeResponse> res=respage.stream().map(typeMapper::typeParentResponse2).toList();
+        List<TypeResponse> res = respage.stream().map(typeMapper::typeParentResponse2).toList();
         return PageResponse.<TypeResponse>builder()
                 .content(res)
                 .number(respage.getNumber())
@@ -273,20 +446,43 @@ public class TypeServiceimplement implements TypeService{
                 .last(respage.isLast())
                 .build();
     }
+
+    /**
+     * Trouve un type par son identifiant, en ignorant les types supprimés.
+     *
+     * @param id Identifiant du type à rechercher.
+     * @return Type Type trouvé.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     private Type findbyid(Long id) {
-        Type t= typeRepository.findByIdAndIsDeletedIsNull(id);
-        if (t==null){
-            throw new  EntityNotFoundException("Type not found with id: " + id);
+        Type t = typeRepository.findByIdAndIsDeletedIsNull(id);
+        if (t == null) {
+            throw new EntityNotFoundException("Type not found with id: " + id);
         }
         return t;
     }
+
+    /**
+     * Trouve un type par son identifiant, y compris les types supprimés.
+     *
+     * @param id Identifiant du type à rechercher.
+     * @return Type Type trouvé.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     */
     private Type find_deleted_byid(Long id) {
-        Type t= typeRepository.findByIdAndIsDeletedIsNotNull(id);
-        if (t==null){
-            throw new  EntityNotFoundException("Type not found with id: " + id);
+        Type t = typeRepository.findByIdAndIsDeletedIsNotNull(id);
+        if (t == null) {
+            throw new EntityNotFoundException("Type not found with id: " + id);
         }
         return t;
     }
+
+    /**
+     * Calcule la profondeur d'un type en remontant à ses parents.
+     *
+     * @param type Type pour lequel calculer la profondeur.
+     * @return int Profondeur du type.
+     */
     private int getDepth(Type type) {
         int depth = 0;
         while (type != null) {
@@ -295,6 +491,17 @@ public class TypeServiceimplement implements TypeService{
         }
         return depth;
     }
+
+    /**
+     * Met à jour un type avec les informations fournies dans la requête.
+     *
+     * @param typeId Identifiant du type à mettre à jour.
+     * @param request Requête contenant les nouvelles informations du type.
+     * @param parent Type parent du type mis à jour.
+     * @return Type Le type mis à jour.
+     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     * @throws IllegalArgumentException Si la profondeur du type dépasse deux niveaux.
+     */
     private Type updateType(Long typeId, TypeRequest request, Type parent) {
         Type type = typeRepository.findByIdAndIsDeletedIsNull(typeId);
         if (type == null) {
@@ -336,7 +543,7 @@ public class TypeServiceimplement implements TypeService{
                     .map(TypeRequest::id)
                     .collect(Collectors.toList());
             List<Type> oldTypes = typeRepository.findByParentAndIdNotIn(type, newTypeIds);
-            for(Type oldType : oldTypes){
+            for (Type oldType : oldTypes) {
                 typeRepository.delete(oldType);
             }
             for (TypeRequest childRequest : request.types()) {
@@ -347,8 +554,45 @@ public class TypeServiceimplement implements TypeService{
                 }
             }
         }
+        boolean shouldDeactivate = request.active() != null && !request.active();
+        if (shouldDeactivate) {
+            deactivateChildrenAndFacteurs(type);
+        }
         return type;
     }
+
+    /**
+     * Désactive les enfants et facteurs d'un type si nécessaire.
+     *
+     * @param type Type dont les enfants et facteurs doivent être désactivés.
+     */
+    private void deactivateChildrenAndFacteurs(Type type) {
+        if (type.getFacteurs() != null) {
+            for (Facteur facteur : type.getFacteurs()) {
+                if (facteur.getActive()) {
+                    facteur.setActive(false);
+                    facteurRepository.save(facteur);
+                }
+            }
+        }
+
+        List<Type> childTypes = typeRepository.findAllByParent(type);
+        if (childTypes != null) {
+            for (Type childType : childTypes) {
+                if (childType.getActive()) {
+                    childType.setActive(false);
+                    deactivateChildrenAndFacteurs(childType);
+                    typeRepository.save(childType);
+                }
+            }
+        }
+    }
+
+    /**
+     * Supprime un type ainsi que tous ses enfants et facteurs associés.
+     *
+     * @param type Type à supprimer.
+     */
     private void deleteTypeAndChildren(Type type) {
         if (type.getFacteurs() != null) {
             for (Facteur facteur : type.getFacteurs()) {

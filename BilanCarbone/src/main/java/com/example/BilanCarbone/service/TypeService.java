@@ -25,5 +25,4 @@ public interface TypeService {
     TypeResponse force_delete_type(Long id);
     TypeResponse recovery_delete_all(Long id);
     PageResponse<TypeResponse> list_all_detail_trash(int page , int size , String search,String... order);
-
 }

@@ -27,6 +27,9 @@ public class TypeResponse {
     private Long parent;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<FacteurResponse> facteurs;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String deleted;
+
     public boolean existfils(Long id){
         for (TypeResponse fil : fils) {
             if (fil.getId().equals(id)) {

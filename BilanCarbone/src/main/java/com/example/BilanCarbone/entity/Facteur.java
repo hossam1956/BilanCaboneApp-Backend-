@@ -10,40 +10,57 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-/**
- * Classe Facteur représentant un facteur utilisé dans les calculs de l'empreinte carbone. 
- */
 
+/**
+ * Représente un facteur dans le système.
+ * <p>
+ * La classe {@code Facteur} est une entité JPA qui représente un facteur avec un nom, une unité, un facteur d'émission,
+ * et une relation avec un type. Un facteur peut également être actif ou inactif.
+ * </p>
+ *
+ * @author Oussama
+ */
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 public class Facteur extends BaseEntity {
+
 	/**
-     * Nom du facteur. C'est un nom descriptif utilisé pour identifier le facteur.
-     */
+	 * Le nom du facteur.
+	 */
 	private String nom;
-	
+
 	/**
-     * Unité de mesure du facteur.
-     */
+	 * L'unité de mesure du facteur.
+	 * <p>
+	 * Les unités sont définies par l'énumération {@code Unite}.
+	 * </p>
+	 */
 	@Enumerated(EnumType.STRING)
 	private Unite unit;
-	
+
 	/**
-     * Valeur du facteur d'émission.
-     * Cela représente la quantité d'émissions par unité d'activité (par exemple, kg de CO2 par litre).
-     */
+	 * Le facteur d'émission associé.
+	 * <p>
+	 * Ce champ est de type {@code BigDecimal} pour permettre une précision élevée dans les valeurs numériques.
+	 * </p>
+	 */
 	private BigDecimal emissionFactor;
-	
+
 	/**
-     * Horodatage indiquant quand ce facteur a été créé.
-     * Cela est utile pour le suivi et l'audit.
-     */
+	 * Le type auquel ce facteur est associé.
+	 * <p>
+	 * La relation est définie avec une clé étrangère nommée {@code type_id}.
+	 * </p>
+	 */
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "type_id")
 	private Type type;
 
-	private Boolean active ;
+	/**
+	 * Indique si le facteur est actif ou non.
+	 */
+	private Boolean active;
 }

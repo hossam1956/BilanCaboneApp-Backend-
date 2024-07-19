@@ -25,6 +25,8 @@ public class FacteurResponse {
     private String creat_at;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String update_at;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String deleted;
 
 
 }
