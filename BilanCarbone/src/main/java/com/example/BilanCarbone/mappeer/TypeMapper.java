@@ -43,7 +43,7 @@ public class TypeMapper {
                 .nom_type(type.getName())
                 .active(type.getActive())
                 .date(type.getCreatedDate().format(formatter))
-                .deleted(type.getLastModifiedDate() != null ? type.getIsDeleted().format(formatter) : null)
+                .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
                 .fils(new ArrayList<>())
                 .parent(null)
                 .build();
@@ -67,7 +67,7 @@ public class TypeMapper {
                 .parent(type.getParent() != null ? type.getParent().getId() : null)
                 .active(type.getActive())
                 .date(type.getCreatedDate().format(formatter))
-                .deleted(type.getLastModifiedDate() != null ? type.getIsDeleted().format(formatter) : null)
+                .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
                 .fils(new ArrayList<>())
                 .build();
     }
@@ -118,6 +118,7 @@ public class TypeMapper {
                 .nom_type(type.getName())
                 .active(type.getActive())
                 .date(type.getCreatedDate().format(formatter))
+
                 .fils(responses)
                 .build();
     }
