@@ -115,14 +115,14 @@ public class FacteurServiceimplement implements FacteurService {
      * @param request {@link FacteurRequest} containing the details of the factor to add.
      * @param type    {@link Type} to which the factor belongs.
      * @return {@link FacteurResponse} containing the added factor details.
-     * @throws IllegalArgumentException If a factor with the same name already exists.
+     * @throws OperationNotPermittedException If a factor with the same name already exists.
      */
     @Transactional
     @Override
     public FacteurResponse addFacteur(FacteurRequest request, Type type) {
         Facteur existingFacteur = facteurRepository.findByNomAndIsDeletedIsNull(request.nom_facteur());
         if (existingFacteur != null) {
-            throw new IllegalArgumentException("Facteur avec nom " + request.nom_facteur() + " deja exists.");
+            throw new OperationNotPermittedException("Facteur avec nom " + request.nom_facteur() + " deja exists.");
         }
         Facteur facteur = Facteur.builder()
                 .nom(request.nom_facteur())

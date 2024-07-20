@@ -49,7 +49,7 @@ public class BaseEntity {
      */
     @UpdateTimestamp
     @Column(insertable = false)
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime UpdateDate;
 
     /**
      * Date et heure de suppression logique de l'entité. Si ce champ est non nul, l'entité est considérée comme supprimée.

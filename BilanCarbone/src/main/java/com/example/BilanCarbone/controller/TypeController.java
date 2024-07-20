@@ -72,9 +72,9 @@ public class TypeController {
             @RequestParam(defaultValue = "false") Boolean all) {
         TypeResponse res;
         if (all) {
-            res = typeService.get_type_detail(id);
-        } else if (detail) {
             res = typeService.get_type_all(id);
+        } else if (detail) {
+            res = typeService.get_type_detail(id);
         } else {
             res = typeService.get_type(id);
         }

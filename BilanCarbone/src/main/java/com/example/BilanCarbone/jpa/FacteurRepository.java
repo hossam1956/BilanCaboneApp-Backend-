@@ -22,7 +22,8 @@ public interface FacteurRepository extends JpaRepository<Facteur, Long> {
 
     Page<Facteur> findAllByIsDeletedNotNull(Pageable pageable);
     Facteur findByIdAndIsDeletedNotNull(Long id);
-    List<Facteur> findByTypeAndIdNotIn(Type type,List<Long> ids);
+    List<Facteur> findAllByTypeAndIdNotInAndIsDeletedNull(Type type,List<Long> ids);
+    List<Facteur> findAllByTypeAndIsDeletedIsNull(Type type);
 
 
 

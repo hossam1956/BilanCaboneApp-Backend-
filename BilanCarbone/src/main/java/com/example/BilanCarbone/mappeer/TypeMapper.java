@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class TypeMapper {
 
     private final FacteurMapper facteurMapper;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
 
     /**
      * Convertit une entité {@code Type} en un objet {@code TypeResponse} en incluant les facteurs associés.
@@ -42,9 +42,10 @@ public class TypeMapper {
                 .facteurs(type.getFacteurs() != null ? type.getFacteurs().stream().map(facteurMapper::toFacteurResponse).collect(Collectors.toList()) : null)
                 .nom_type(type.getName())
                 .active(type.getActive())
-                .date(type.getCreatedDate().format(formatter))
+                .create(type.getCreatedDate().format(formatter))
                 .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
-                .fils(new ArrayList<>())
+                .update(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null)
+                .files(new ArrayList<>())
                 .parent(null)
                 .build();
     }
@@ -59,17 +60,14 @@ public class TypeMapper {
      * @param type l'entité {@code Type} à convertir
      * @return un objet {@code TypeResponse} contenant les informations de l'entité {@code Type}
      */
-    public TypeResponse typeParentResponse2(Type type) {
-        return TypeResponse.builder()
-                .id(type.getId())
-                .facteurs(null)
-                .nom_type(type.getName())
-                .parent(type.getParent() != null ? type.getParent().getId() : null)
-                .active(type.getActive())
-                .date(type.getCreatedDate().format(formatter))
-                .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
-                .fils(new ArrayList<>())
-                .build();
+    public TypeResponse typeParentResponse_with_date_and_parent(Type type) {
+        TypeResponse typeResponse = this.typeParentResponse_simple(type);
+        typeResponse.setActive(type.getActive());
+        typeResponse.setDeleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null);
+        typeResponse.setUpdate(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null);
+        typeResponse.setCreate(type.getCreatedDate()!=null ? type.getCreatedDate().format(formatter) : null);
+        typeResponse.setParent(type.getParent()!=null ? type.getParent().getId() : null);
+        return typeResponse;
     }
 
     /**
@@ -82,15 +80,11 @@ public class TypeMapper {
      * @param type l'entité {@code Type} à convertir
      * @return un objet {@code TypeResponse} contenant les informations de l'entité {@code Type}
      */
-    public TypeResponse typeParentResponse3(Type type) {
+    public TypeResponse typeParentResponse_simple(Type type) {
         return TypeResponse.builder()
                 .id(type.getId())
-                .facteurs(null)
                 .nom_type(type.getName())
-                .parent(null)
-                .active(null)
-                .date(null)
-                .fils(new ArrayList<>())
+                .files(new ArrayList<>())
                 .build();
     }
 
@@ -117,9 +111,10 @@ public class TypeMapper {
                 .facteurs(null)
                 .nom_type(type.getName())
                 .active(type.getActive())
-                .date(type.getCreatedDate().format(formatter))
-
-                .fils(responses)
+                .create(type.getCreatedDate().format(formatter))
+                .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
+                .update(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null)
+                .files(responses)
                 .build();
     }
 
@@ -140,7 +135,7 @@ public class TypeMapper {
             res = new ArrayList<>();
             for (Type i : list) {
                 if (i.getParent() == null) {
-                    res.add(typeParentResponse3(i));
+                    res.add(typeParentResponse_simple(i));
                 }
             }
             for (TypeResponse i : res) {
@@ -149,7 +144,7 @@ public class TypeMapper {
                         continue;
                     }
                     if (i.getId().equals(j.getParent().getId())) {
-                        i.getFils().add(typeParentResponse3(j));
+                        i.getFiles().add(typeParentResponse_simple(j));
                     }
                 }
             }

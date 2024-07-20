@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter;
  */
 @Service
 public class FacteurMapper {
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
 
     /**
      * Convertit une entité {@code Facteur} en un objet {@code FacteurResponse}.
@@ -41,7 +41,7 @@ public class FacteurMapper {
                 .emissionFactor(facteur.getEmissionFactor())
                 .type(facteur.getType() != null ? facteur.getType().getId() : null)
                 .creat_at(facteur.getCreatedDate().format(formatter))
-                .update_at(facteur.getLastModifiedDate() != null ? facteur.getLastModifiedDate().format(formatter) : null)
+                .update_at(facteur.getUpdateDate() != null ? facteur.getUpdateDate().format(formatter) : null)
                 .deleted(facteur.getIsDeleted() != null ? facteur.getIsDeleted().format(formatter) : null)
                 .build();
     }

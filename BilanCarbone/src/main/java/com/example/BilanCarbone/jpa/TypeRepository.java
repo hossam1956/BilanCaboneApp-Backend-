@@ -21,7 +21,7 @@ public interface TypeRepository extends JpaRepository<Type, Long> {
     List<Type> findAllByActiveIsTrueAndIsDeletedIsNull();
     Type findByIdAndIsDeletedIsNull(Long id);
     Page<Type> findAllByIsDeletedIsNull(Pageable pageable);
-    List<Type> findByParentAndIdNotIn(Type parent, List<Long> ids);
+    List<Type> findAllByParentAndIdNotIn(Type parent, List<Long> ids);
     Type findByIdAndIsDeletedIsNotNull(Long id);
     List<Type> findAllByParent(Type parent);
     Page<Type> findAllByIsDeletedNotNull(Pageable pageable);

@@ -20,18 +20,20 @@ public class TypeResponse {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Boolean active;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String date;
+    private String create;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<TypeResponse> fils;
+    private List<TypeResponse> files;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Long parent;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<FacteurResponse> facteurs;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String deleted;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String update;
 
     public boolean existfils(Long id){
-        for (TypeResponse fil : fils) {
+        for (TypeResponse fil : files) {
             if (fil.getId().equals(id)) {
                 return true;
             }
