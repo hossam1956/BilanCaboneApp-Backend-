@@ -2,13 +2,13 @@ package com.example.BilanCarbone.mappeer;
 
 import com.example.BilanCarbone.dto.TypeResponse;
 import com.example.BilanCarbone.entity.Type;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 /**
  * Fournit des méthodes pour mapper les entités {@link Type} en objets {@link TypeResponse}.
  * <p>
@@ -19,11 +19,14 @@ import java.util.stream.Collectors;
  * @author Oussama
  */
 @Service
-@RequiredArgsConstructor
 public class TypeMapper {
 
     private final FacteurMapper facteurMapper;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
+
+    public TypeMapper(FacteurMapper facteurMapper) {
+        this.facteurMapper = facteurMapper;
+    }
 
     /**
      * Convertit une entité {@code Type} en un objet {@code TypeResponse} en incluant les facteurs associés.
@@ -65,8 +68,8 @@ public class TypeMapper {
         typeResponse.setActive(type.getActive());
         typeResponse.setDeleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null);
         typeResponse.setUpdate(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null);
-        typeResponse.setCreate(type.getCreatedDate()!=null ? type.getCreatedDate().format(formatter) : null);
-        typeResponse.setParent(type.getParent()!=null ? type.getParent().getId() : null);
+        typeResponse.setCreate(type.getCreatedDate() != null ? type.getCreatedDate().format(formatter) : null);
+        typeResponse.setParent(type.getParent() != null ? type.getParent().getId() : null);
         return typeResponse;
     }
 
@@ -95,7 +98,7 @@ public class TypeMapper {
      * Les enfants sont convertis en objets {@code TypeResponse} et ajoutés au champ {@code fils} de la réponse.
      * </p>
      *
-     * @param type l'entité {@code Type} à convertir
+     * @param type  l'entité {@code Type} à convertir
      * @param types la liste des enfants à inclure dans la réponse
      * @return un objet {@code TypeResponse} contenant les informations de l'entité {@code Type} et ses enfants
      */
@@ -125,7 +128,7 @@ public class TypeMapper {
      * Les types sans parent sont ajoutés à la liste des réponses, et les enfants sont associés aux parents correspondants.
      * </p>
      *
-     * @param list la liste des types principaux
+     * @param list  la liste des types principaux
      * @param child la liste des types enfants
      * @return une liste d'objets {@code TypeResponse} représentant la hiérarchie des types
      */

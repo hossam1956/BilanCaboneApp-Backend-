@@ -121,11 +121,15 @@ public enum Unite {
     public static List<String> getAllUnits() {
         List<String> units = new ArrayList<>();
         for (Unite i : Unite.values()) {
-            if(i.getUnit().equalsIgnoreCase("UNKNOWN")) {
+            if (i.getUnit().equalsIgnoreCase("UNKNOWN")) {
                 continue;
             }
             units.add(i.getUnit());
         }
         return units;
+    }
+
+    public String getUnit() {
+        return this.unit;
     }
 }

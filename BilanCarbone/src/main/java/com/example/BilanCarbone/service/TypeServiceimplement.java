@@ -1,6 +1,9 @@
 package com.example.BilanCarbone.service;
+
 import com.example.BilanCarbone.common.PageResponse;
-import com.example.BilanCarbone.dto.*;
+import com.example.BilanCarbone.dto.FacteurRequest;
+import com.example.BilanCarbone.dto.TypeRequest;
+import com.example.BilanCarbone.dto.TypeResponse;
 import com.example.BilanCarbone.entity.Facteur;
 import com.example.BilanCarbone.entity.Type;
 import com.example.BilanCarbone.entity.Unite;
@@ -10,7 +13,6 @@ import com.example.BilanCarbone.jpa.TypeRepository;
 import com.example.BilanCarbone.mappeer.TypeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,13 +27,13 @@ import java.util.stream.Collectors;
 /**
  * @author Oussama
  **/
+
 /**
  * Implémentation des services liés aux entités Type.
  *
  * @author Oussama
  */
 @Service
-@RequiredArgsConstructor
 public class TypeServiceimplement implements TypeService {
 
     private final TypeRepository typeRepository;
@@ -39,13 +41,20 @@ public class TypeServiceimplement implements TypeService {
     private final FacteurRepository facteurRepository;
     private final FacteurService facteurService;
 
+    public TypeServiceimplement(TypeRepository typeRepository, TypeMapper typeMapper, FacteurRepository facteurRepository, FacteurService facteurService) {
+        this.typeRepository = typeRepository;
+        this.typeMapper = typeMapper;
+        this.facteurRepository = facteurRepository;
+        this.facteurService = facteurService;
+    }
+
     /**
      * Liste des types parent avec pagination, tri et recherche.
      *
-     * @param page Numéro de la page à récupérer (commence à 0).
-     * @param size Nombre d'éléments par page.
+     * @param page   Numéro de la page à récupérer (commence à 0).
+     * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order Ordre de tri des résultats.
+     * @param order  Ordre de tri des résultats.
      * @return PageResponse<TypeResponse> Liste paginée des types parent.
      */
     @Override
@@ -57,10 +66,10 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Liste de tous les types avec pagination, tri et recherche.
      *
-     * @param page Numéro de la page à récupérer (commence à 0).
-     * @param size Nombre d'éléments par page.
+     * @param page   Numéro de la page à récupérer (commence à 0).
+     * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order Ordre de tri des résultats.
+     * @param order  Ordre de tri des résultats.
      * @return PageResponse<TypeResponse> Liste paginée de tous les types.
      */
     @Override
@@ -79,10 +88,10 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Liste détaillée de tous les types avec pagination, tri et recherche.
      *
-     * @param page Numéro de la page à récupérer (commence à 0).
-     * @param size Nombre d'éléments par page.
+     * @param page   Numéro de la page à récupérer (commence à 0).
+     * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order Ordre de tri des résultats.
+     * @param order  Ordre de tri des résultats.
      * @return PageResponse<TypeResponse> Liste paginée des types avec détails.
      */
     @Override
@@ -130,6 +139,7 @@ public class TypeServiceimplement implements TypeService {
         }
         return typeMapper.typeParentResponse(res);
     }
+
     /**
      * Récupère les détails d'un type suprimee avec ses enfants.
      *
@@ -172,7 +182,7 @@ public class TypeServiceimplement implements TypeService {
      * @param id Identifiant du type à activer.
      * @return TypeResponse Détails du type activé.
      * @throws OperationNotPermittedException Si le type est déjà activé.
-     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     * @throws EntityNotFoundException        Si le type avec l'ID spécifié n'est pas trouvé.
      */
     @Override
     public TypeResponse activate_type(Long id) {
@@ -188,7 +198,7 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Active ou désactive un type et ses enfants.
      *
-     * @param id Identifiant du type à modifier.
+     * @param id       Identifiant du type à modifier.
      * @param activate Boolean indiquant si le type doit être activé (true) ou désactivé (false).
      * @return TypeResponse Détails du type après activation/désactivation.
      * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
@@ -196,7 +206,7 @@ public class TypeServiceimplement implements TypeService {
     @Override
     public TypeResponse toggle_type_detail(Long id, boolean activate) {
         Type type = findbyid(id);
-        Type re=toggleTypeAndChildren(type, activate);
+        Type re = toggleTypeAndChildren(type, activate);
         return this.get_type_all(re.getId());
     }
 
@@ -228,7 +238,7 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Met à jour les détails d'un type.
      *
-     * @param id Identifiant du type à mettre à jour.
+     * @param id      Identifiant du type à mettre à jour.
      * @param request Requête contenant les nouvelles informations du type.
      * @return TypeResponse Détails du type mis à jour.
      * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
@@ -239,6 +249,7 @@ public class TypeServiceimplement implements TypeService {
         Type type = updateType(id, request, null);
         return this.get_type_detail(type.getId());
     }
+
     /**
      * Supprime un type en le marquant comme supprimé, et supprime également ses enfants.
      *
@@ -265,7 +276,7 @@ public class TypeServiceimplement implements TypeService {
     @Transactional
     public TypeResponse force_delete_type(Long id) {
         Type type = find_deleted_byid(id);
-        TypeResponse resp=this.get_type_detail_deleted(type.getId());
+        TypeResponse resp = this.get_type_detail_deleted(type.getId());
         deleteTypeAndChildren(type);
         return resp;
     }
@@ -287,10 +298,10 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Liste des types supprimés avec pagination, tri et recherche.
      *
-     * @param page Numéro de la page à récupérer (commence à 0).
-     * @param size Nombre d'éléments par page.
+     * @param page   Numéro de la page à récupérer (commence à 0).
+     * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types supprimés.
-     * @param order Ordre de tri des résultats.
+     * @param order  Ordre de tri des résultats.
      * @return PageResponse<TypeResponse> Liste paginée des types supprimés.
      */
     @Override
@@ -309,11 +320,11 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Basculer l'état de suppression d'un type et de ses enfants.
      *
-     * @param id Identifiant du type à modifier.
+     * @param id      Identifiant du type à modifier.
      * @param deleted Boolean indiquant si le type doit être supprimé (true) ou récupéré (false).
      * @return Type Le type modifié.
      * @throws OperationNotPermittedException Si l'opération n'est pas autorisée.
-     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     * @throws EntityNotFoundException        Si le type avec l'ID spécifié n'est pas trouvé.
      */
     private Type toggle_delete(Long id, Boolean deleted) {
         Type type;
@@ -358,7 +369,7 @@ public class TypeServiceimplement implements TypeService {
      * Ajoute un type et ses facteurs, ainsi que ses enfants si spécifié.
      *
      * @param request Requête contenant les détails du type à ajouter.
-     * @param parent Type parent du nouveau type.
+     * @param parent  Type parent du nouveau type.
      * @return Type Le type ajouté.
      * @throws OperationNotPermittedException Si un type avec le même nom existe déjà ou si la profondeur dépasse deux niveaux.
      */
@@ -401,7 +412,7 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Active ou désactive un type et ses enfants.
      *
-     * @param type Type à modifier.
+     * @param type     Type à modifier.
      * @param activate Boolean indiquant si le type doit être activé (true) ou désactivé (false).
      * @return Type Le type modifié.
      */
@@ -432,10 +443,10 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Obtient une page de types triés en fonction de la recherche et du tri.
      *
-     * @param page Numéro de la page à récupérer (commence à 0).
-     * @param size Nombre d'éléments par page.
+     * @param page   Numéro de la page à récupérer (commence à 0).
+     * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order Ordre de tri des résultats.
+     * @param order  Ordre de tri des résultats.
      * @return Page<Type> Page des types triés.
      */
     private Page<Type> pagesorted(int page, int size, String search, String[] order) {
@@ -514,11 +525,11 @@ public class TypeServiceimplement implements TypeService {
     /**
      * Met à jour un type avec les informations fournies dans la requête.
      *
-     * @param typeId Identifiant du type à mettre à jour.
+     * @param typeId  Identifiant du type à mettre à jour.
      * @param request Requête contenant les nouvelles informations du type.
-     * @param parent Type parent du type mis à jour.
+     * @param parent  Type parent du type mis à jour.
      * @return Type Le type mis à jour.
-     * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
+     * @throws EntityNotFoundException        Si le type avec l'ID spécifié n'est pas trouvé.
      * @throws OperationNotPermittedException Si la profondeur du type dépasse deux niveaux.
      */
     private Type updateType(Long typeId, TypeRequest request, Type parent) {

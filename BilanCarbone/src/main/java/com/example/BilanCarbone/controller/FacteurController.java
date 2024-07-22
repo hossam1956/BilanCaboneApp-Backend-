@@ -6,7 +6,6 @@ import com.example.BilanCarbone.dto.FacteurResponse;
 import com.example.BilanCarbone.service.FacteurService;
 import com.example.BilanCarbone.validation.OnCreate;
 import com.example.BilanCarbone.validation.OnUpdate;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,16 +23,19 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/facteur")
-@RequiredArgsConstructor
 public class FacteurController {
 
     private final FacteurService facteurService;
 
+    public FacteurController(FacteurService facteurService) {
+        this.facteurService = facteurService;
+    }
+
     /**
      * Obtient une liste paginée de facteurs, avec options de recherche et de tri.
      *
-     * @param page Le numéro de la page à récupérer (0 par défaut).
-     * @param size La taille de la page (8 par défaut).
+     * @param page   Le numéro de la page à récupérer (0 par défaut).
+     * @param size   La taille de la page (8 par défaut).
      * @param search Termes de recherche pour filtrer les résultats.
      * @param sortBy Critères de tri des résultats.
      * @return Une réponse contenant la page de facteurs correspondant aux critères spécifiés.
@@ -83,7 +85,7 @@ public class FacteurController {
     /**
      * Met à jour un facteur spécifique avec les nouvelles informations fournies.
      *
-     * @param id L'identifiant du facteur à mettre à jour.
+     * @param id             L'identifiant du facteur à mettre à jour.
      * @param facteurRequest Les nouvelles données du facteur à mettre à jour.
      * @return Une réponse contenant les détails du facteur après mise à jour.
      */
@@ -161,8 +163,8 @@ public class FacteurController {
     /**
      * Obtient une liste paginée de facteurs supprimés (soft delete), avec options de recherche et de tri.
      *
-     * @param page Le numéro de la page à récupérer (0 par défaut).
-     * @param size La taille de la page (8 par défaut).
+     * @param page   Le numéro de la page à récupérer (0 par défaut).
+     * @param size   La taille de la page (8 par défaut).
      * @param search Termes de recherche pour filtrer les résultats.
      * @param sortBy Critères de tri des résultats.
      * @return Une réponse contenant la page de facteurs supprimés correspondant aux critères spécifiés.
