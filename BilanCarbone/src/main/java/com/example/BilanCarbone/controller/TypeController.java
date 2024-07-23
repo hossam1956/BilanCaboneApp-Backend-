@@ -5,7 +5,6 @@ import com.example.BilanCarbone.dto.TypeRequest;
 import com.example.BilanCarbone.dto.TypeResponse;
 import com.example.BilanCarbone.service.TypeService;
 import com.example.BilanCarbone.validation.OnCreate;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,7 @@ import java.util.List;
  * Contrôleur REST pour gérer les opérations liées aux types.
  * <p>
  * Cette classe expose les endpoints nécessaires pour effectuer des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer)
- * sur les objets de type. Elle fournit également des fonctionnalités pour activer, désactiver, et gérer les types
+ * sur les objets de type {@link Type}. Elle fournit également des fonctionnalités pour activer, désactiver, et gérer les types
  * dans la corbeille.
  * </p>
  *
@@ -25,16 +24,19 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/type")
-@RequiredArgsConstructor
 public class TypeController {
 
     private final TypeService typeService;
 
+    public TypeController(TypeService typeService) {
+        this.typeService = typeService;
+    }
+
     /**
      * Obtient une liste paginée de types, avec options de recherche, de tri, et de filtrage par type parent ou détaillé.
      *
-     * @param page Le numéro de la page à récupérer (0 par défaut).
-     * @param size La taille de la page (8 par défaut).
+     * @param page   Le numéro de la page à récupérer (0 par défaut).
+     * @param size   La taille de la page (8 par défaut).
      * @param search Termes de recherche pour filtrer les résultats.
      * @param sortBy Critères de tri des résultats.
      * @param parent Indicateur pour filtrer uniquement les types parents (false par défaut).
@@ -60,9 +62,9 @@ public class TypeController {
     /**
      * Obtient les détails d'un type spécifique par son identifiant, avec options pour des détails supplémentaires ou complets.
      *
-     * @param id L'identifiant du type à récupérer.
+     * @param id     L'identifiant du type à récupérer.
      * @param detail Indicateur pour obtenir des détails supplémentaires sur le type (false par défaut).
-     * @param all Indicateur pour obtenir toutes les informations disponibles sur le type (false par défaut).
+     * @param all    Indicateur pour obtenir toutes les informations disponibles sur le type (false par défaut).
      * @return Une réponse contenant les détails du type demandé.
      */
     @GetMapping("/{id}")
@@ -72,9 +74,9 @@ public class TypeController {
             @RequestParam(defaultValue = "false") Boolean all) {
         TypeResponse res;
         if (all) {
-            res = typeService.get_type_detail(id);
-        } else if (detail) {
             res = typeService.get_type_all(id);
+        } else if (detail) {
+            res = typeService.get_type_detail(id);
         } else {
             res = typeService.get_type(id);
         }
@@ -84,7 +86,7 @@ public class TypeController {
     /**
      * Active un type spécifique par son identifiant, avec option pour obtenir des détails complets.
      *
-     * @param id L'identifiant du type à activer.
+     * @param id  L'identifiant du type à activer.
      * @param all Indicateur pour obtenir des détails complets après activation (false par défaut).
      * @return Une réponse contenant les détails du type après activation.
      */
@@ -164,8 +166,8 @@ public class TypeController {
     /**
      * Obtient une liste paginée de types supprimés (soft delete), avec options de recherche et de tri.
      *
-     * @param page Le numéro de la page à récupérer (0 par défaut).
-     * @param size La taille de la page (8 par défaut).
+     * @param page   Le numéro de la page à récupérer (0 par défaut).
+     * @param size   La taille de la page (8 par défaut).
      * @param search Termes de recherche pour filtrer les résultats.
      * @param sortBy Critères de tri des résultats.
      * @return Une réponse contenant la page de types supprimés correspondant aux critères spécifiés.
@@ -182,7 +184,7 @@ public class TypeController {
     /**
      * Met à jour un type spécifique avec les nouvelles informations fournies.
      *
-     * @param id L'identifiant du type à mettre à jour.
+     * @param id          L'identifiant du type à mettre à jour.
      * @param typeRequest Les nouvelles données du type à mettre à jour.
      * @return Une réponse contenant les détails du type après mise à jour.
      */

@@ -12,13 +12,12 @@ import com.example.BilanCarbone.jpa.TypeRepository;
 import com.example.BilanCarbone.mappeer.FacteurMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
-import lombok.Builder;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,13 +31,17 @@ import java.util.List;
  * </p>
  */
 @Service
-@RequiredArgsConstructor
-@Builder
 public class FacteurServiceimplement implements FacteurService {
 
     private final FacteurRepository facteurRepository;
     private final TypeRepository typeRepository;
     private final FacteurMapper facteurMapper;
+
+    public FacteurServiceimplement(FacteurRepository facteurRepository, TypeRepository typeRepository, FacteurMapper facteurMapper) {
+        this.facteurRepository = facteurRepository;
+        this.typeRepository = typeRepository;
+        this.facteurMapper = facteurMapper;
+    }
 
     /**
      * Retrieves a paginated list of all active factors with optional search and sorting.
@@ -58,16 +61,15 @@ public class FacteurServiceimplement implements FacteurService {
                 facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(), pe);
 
         List<FacteurResponse> res = page.stream().map(facteurMapper::toFacteurResponse).toList();
-        PageResponse<FacteurResponse> pageResponse = new PageResponse<>();
-        pageResponse.setContent(res);
-        pageResponse.setNumber(page.getNumber());
-        pageResponse.setSize(page.getSize());
-        pageResponse.setTotalElements(page.getTotalElements());
-        pageResponse.setTotalPages(page.getTotalPages());
-        pageResponse.setFirst(page.isFirst());
-        pageResponse.setLast(page.isLast());
-
-        return pageResponse;
+        return PageResponse.<FacteurResponse>builder()
+                .content(res)
+                .number(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     /**
@@ -117,14 +119,14 @@ public class FacteurServiceimplement implements FacteurService {
      * @param request {@link FacteurRequest} containing the details of the factor to add.
      * @param type    {@link Type} to which the factor belongs.
      * @return {@link FacteurResponse} containing the added factor details.
-     * @throws IllegalArgumentException If a factor with the same name already exists.
+     * @throws OperationNotPermittedException If a factor with the same name already exists.
      */
     @Transactional
     @Override
     public FacteurResponse addFacteur(FacteurRequest request, Type type) {
         Facteur existingFacteur = facteurRepository.findByNomAndIsDeletedIsNull(request.nom_facteur());
         if (existingFacteur != null) {
-            throw new IllegalArgumentException("Facteur avec nom " + request.nom_facteur() + " deja exists.");
+            throw new OperationNotPermittedException("Facteur avec nom " + request.nom_facteur() + " deja exists.");
         }
         Facteur facteur = Facteur.builder()
                 .nom(request.nom_facteur())
@@ -174,7 +176,7 @@ public class FacteurServiceimplement implements FacteurService {
      * @param facteurId ID of the factor to delete.
      * @return {@link FacteurResponse} containing the details of the deleted factor.
      * @throws OperationNotPermittedException If the factor is already deleted.
-     * @throws EntityNotFoundException       If the factor with the specified ID does not exist.
+     * @throws EntityNotFoundException        If the factor with the specified ID does not exist.
      */
     @Override
     public FacteurResponse delete_facteur(Long facteurId) {
@@ -192,7 +194,7 @@ public class FacteurServiceimplement implements FacteurService {
      * @param facteurId ID of the factor to delete.
      * @return {@link FacteurResponse} containing the details of the deleted factor.
      * @throws OperationNotPermittedException If the factor is not deleted.
-     * @throws EntityNotFoundException       If the factor with the specified ID does not exist.
+     * @throws EntityNotFoundException        If the factor with the specified ID does not exist.
      */
     @Override
     public FacteurResponse delete_force_facteur(Long facteurId) {
@@ -210,7 +212,7 @@ public class FacteurServiceimplement implements FacteurService {
      * @param facteurId ID of the factor to recover.
      * @return {@link FacteurResponse} containing the details of the recovered factor.
      * @throws OperationNotPermittedException If the factor is not deleted or its type is deleted.
-     * @throws EntityNotFoundException       If the factor with the specified ID does not exist.
+     * @throws EntityNotFoundException        If the factor with the specified ID does not exist.
      */
     @Override
     public FacteurResponse recovery_facteur(Long facteurId) {
@@ -243,17 +245,15 @@ public class FacteurServiceimplement implements FacteurService {
                 facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(search.toLowerCase().trim(), pe);
 
         List<FacteurResponse> res = page.stream().map(facteurMapper::toFacteurResponse).toList();
-
-        PageResponse<FacteurResponse> pageResponse = new PageResponse<>();
-        pageResponse.setContent(res);
-        pageResponse.setNumber(page.getNumber());
-        pageResponse.setSize(page.getSize());
-        pageResponse.setTotalElements(page.getTotalElements());
-        pageResponse.setTotalPages(page.getTotalPages());
-        pageResponse.setFirst(page.isFirst());
-        pageResponse.setLast(page.isLast());
-
-        return pageResponse;
+        return PageResponse.<FacteurResponse>builder()
+                .content(res)
+                .number(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     /**
@@ -263,7 +263,7 @@ public class FacteurServiceimplement implements FacteurService {
      * @param activate New activation status.
      * @return {@link FacteurResponse} containing the updated factor details.
      * @throws OperationNotPermittedException If the factor is already in the desired state or if the type is inactive.
-     * @throws EntityNotFoundException       If the factor with the specified ID does not exist.
+     * @throws EntityNotFoundException        If the factor with the specified ID does not exist.
      */
     @Override
     public FacteurResponse tooglefactecurtoggleActivation(Long id, boolean activate) {

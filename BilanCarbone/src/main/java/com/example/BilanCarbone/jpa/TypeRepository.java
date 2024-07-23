@@ -4,16 +4,13 @@ import com.example.BilanCarbone.entity.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
  * @author Oussama
  **/
-@Repository
 public interface TypeRepository extends JpaRepository<Type, Long> {
-	
     Page<Type> findAllByParentIsNullAndIsDeletedIsNull(Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(String Name,Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(String Name,Pageable pageable);
@@ -24,7 +21,7 @@ public interface TypeRepository extends JpaRepository<Type, Long> {
     List<Type> findAllByActiveIsTrueAndIsDeletedIsNull();
     Type findByIdAndIsDeletedIsNull(Long id);
     Page<Type> findAllByIsDeletedIsNull(Pageable pageable);
-    List<Type> findByParentAndIdNotIn(Type parent, List<Long> ids);
+    List<Type> findAllByParentAndIdNotIn(Type parent, List<Long> ids);
     Type findByIdAndIsDeletedIsNotNull(Long id);
     List<Type> findAllByParent(Type parent);
     Page<Type> findAllByIsDeletedNotNull(Pageable pageable);

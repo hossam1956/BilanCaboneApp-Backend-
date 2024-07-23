@@ -2,9 +2,6 @@ package com.example.BilanCarbone.mappeer;
 
 import com.example.BilanCarbone.dto.FacteurResponse;
 import com.example.BilanCarbone.entity.Facteur;
-
-import lombok.Builder;
-
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -21,9 +18,8 @@ import java.time.format.DateTimeFormatter;
  * @author Oussama
  */
 @Service
-@Builder
 public class FacteurMapper {
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
 
     /**
      * Convertit une entité {@code Facteur} en un objet {@code FacteurResponse}.
@@ -45,7 +41,7 @@ public class FacteurMapper {
                 .emissionFactor(facteur.getEmissionFactor())
                 .type(facteur.getType() != null ? facteur.getType().getId() : null)
                 .creat_at(facteur.getCreatedDate().format(formatter))
-                .update_at(facteur.getLastModifiedDate() != null ? facteur.getLastModifiedDate().format(formatter) : null)
+                .update_at(facteur.getUpdateDate() != null ? facteur.getUpdateDate().format(formatter) : null)
                 .deleted(facteur.getIsDeleted() != null ? facteur.getIsDeleted().format(formatter) : null)
                 .build();
     }

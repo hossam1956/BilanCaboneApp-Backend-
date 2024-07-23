@@ -52,7 +52,7 @@ public class GlobalExcepHandler {
                 .status(BAD_REQUEST)
                 .body(
                         ExceptionResponse.builder()
-                                .errors(errors)
+                                .erros(errors)
                                 .details("Certaines données sont invalides")
                                 .code(BAD_REQUEST.value())
                                 .date(LocalDateTime.now())
