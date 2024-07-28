@@ -9,7 +9,7 @@ import com.example.BilanCarbone.entity.Unite;
 import com.example.BilanCarbone.exception.OperationNotPermittedException;
 import com.example.BilanCarbone.jpa.FacteurRepository;
 import com.example.BilanCarbone.jpa.TypeRepository;
-import com.example.BilanCarbone.mappeer.FacteurMapper;
+import com.example.BilanCarbone.mapper.FacteurMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;

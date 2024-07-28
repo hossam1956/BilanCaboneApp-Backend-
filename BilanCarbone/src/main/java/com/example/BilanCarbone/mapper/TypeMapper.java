@@ -1,4 +1,4 @@
-package com.example.BilanCarbone.mappeer;
+package com.example.BilanCarbone.mapper;
 
 import com.example.BilanCarbone.dto.TypeResponse;
 import com.example.BilanCarbone.entity.Type;

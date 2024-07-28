@@ -16,7 +16,7 @@ import java.util.List;
  * Contrôleur REST pour gérer les opérations liées aux types.
  * <p>
  * Cette classe expose les endpoints nécessaires pour effectuer des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer)
- * sur les objets de type {@link Type}. Elle fournit également des fonctionnalités pour activer, désactiver, et gérer les types
+ * sur les objets de type {@link  -Type}. Elle fournit également des fonctionnalités pour activer, désactiver, et gérer les types
  * dans la corbeille.
  * </p>
  *
