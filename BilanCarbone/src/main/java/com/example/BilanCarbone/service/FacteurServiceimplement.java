@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -49,28 +50,44 @@ public class FacteurServiceimplement implements FacteurService {
      * @param ge     Page number to retrieve.
      * @param size   Number of factors per page.
      * @param search Optional search term to filter factors by name.
-     * @param order  Optional sorting parameters.
+     * @param sortBy  Optional sorting parameters.
      * @return A {@link PageResponse} containing the paginated list of {@link FacteurResponse}.
      */
     @Override
-    public PageResponse<FacteurResponse> getAllFacteurs(int ge, int size, String search, String... order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(ge, size, sort);
-        Page<Facteur> page = search.isEmpty() ?
-                facteurRepository.findAllByIsDeletedIsNull(pe) :
-                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(), pe);
+    public PageResponse<FacteurResponse> getAllFacteurs(int page, int size, String search, String... sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
 
-        List<FacteurResponse> res = page.stream().map(facteurMapper::toFacteurResponse).toList();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
+        }
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
+
+        Page<Facteur> facteurPage = search.isEmpty() ?
+                facteurRepository.findAllByIsDeletedIsNull(pageable) :
+                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(), pageable);
+
+        List<FacteurResponse> responseList = facteurPage.stream()
+                .map(facteurMapper::toFacteurResponse)
+                .toList();
+
         return PageResponse.<FacteurResponse>builder()
-                .content(res)
-                .number(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
+                .content(responseList)
+                .number(facteurPage.getNumber())
+                .size(facteurPage.getSize())
+                .totalElements(facteurPage.getTotalElements())
+                .totalPages(facteurPage.getTotalPages())
+                .first(facteurPage.isFirst())
+                .last(facteurPage.isLast())
                 .build();
     }
+
+
 
     /**
      * Retrieves a factor by its ID.
@@ -233,16 +250,25 @@ public class FacteurServiceimplement implements FacteurService {
      * @param ge     Page number to retrieve.
      * @param size   Number of factors per page.
      * @param search Optional search term to filter factors by name.
-     * @param order  Optional sorting parameters.
+     * @param sortBy  Optional sorting parameters.
      * @return A {@link PageResponse} containing the paginated list of {@link FacteurResponse}.
      */
     @Override
-    public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int ge, int size, String search, String... order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(ge, size, sort);
+    public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int ge, int size, String search, String... sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
+        }
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(ge, size, Sort.by(orders));
         Page<Facteur> page = search.isEmpty() ?
-                facteurRepository.findAllByIsDeletedNotNull(pe) :
-                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(search.toLowerCase().trim(), pe);
+                facteurRepository.findAllByIsDeletedNotNull(pageable) :
+                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(search.toLowerCase().trim(), pageable);
 
         List<FacteurResponse> res = page.stream().map(facteurMapper::toFacteurResponse).toList();
         return PageResponse.<FacteurResponse>builder()
@@ -274,7 +300,7 @@ public class FacteurServiceimplement implements FacteurService {
         }
         if (!activate) {
             Type type = facteur.getType();
-            if (!type.getActive()) {
+            if ( type != null && !type.getActive()) {
                 throw new OperationNotPermittedException("Le type " + id + " est désactivé (active ce type)");
             }
         }

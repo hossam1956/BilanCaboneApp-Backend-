@@ -45,10 +45,9 @@ public class FacteurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "")    String[] sortBy) {
         return ResponseEntity.ok(facteurService.getAllFacteurs(page, size, search, sortBy));
     }
-
     /**
      * Obtient les détails d'un facteur spécifique par son identifiant.
      *
@@ -174,7 +173,7 @@ public class FacteurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "")    String[] sortBy) {
         return ResponseEntity.ok(facteurService.get_All_deleted_Facteurs(page, size, search, sortBy));
     }
 }

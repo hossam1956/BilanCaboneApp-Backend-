@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -69,18 +70,27 @@ public class TypeServiceimplement implements TypeService {
      * @param page   Numéro de la page à récupérer (commence à 0).
      * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order  Ordre de tri des résultats.
+     * @param sortBy  Ordre de tri des résultats.
      * @return PageResponse<TypeResponse> Liste paginée de tous les types.
      */
     @Override
-    public PageResponse<TypeResponse> list_all(int page, int size, String search, String... order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size, sort);
+    public PageResponse<TypeResponse> list_all(int page, int size, String search, String... sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
+        }
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
         Page<Type> respage = null;
         if (search != null && !search.isEmpty()) {
-            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pe);
+            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pageable);
         } else {
-            respage = typeRepository.findAllByIsDeletedIsNull(pe);
+            respage = typeRepository.findAllByIsDeletedIsNull(pageable);
         }
         return getTypeResponsePageResponse(respage);
     }
@@ -446,16 +456,25 @@ public class TypeServiceimplement implements TypeService {
      * @param page   Numéro de la page à récupérer (commence à 0).
      * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order  Ordre de tri des résultats.
+     * @param sortBy  Ordre de tri des résultats.
      * @return Page<Type> Page des types triés.
      */
-    private Page<Type> pagesorted(int page, int size, String search, String[] order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size, sort);
-        if (!search.isEmpty()) {
-            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pe);
+    private Page<Type> pagesorted(int page, int size, String search, String[] sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
         }
-        return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pe);
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
+        if (!search.isEmpty()) {
+            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pageable);
+        }
+        return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pageable);
     }
 
     /**

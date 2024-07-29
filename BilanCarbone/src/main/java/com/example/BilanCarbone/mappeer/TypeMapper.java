@@ -43,8 +43,10 @@ public class TypeMapper {
         return TypeResponse.builder()
                 .id(type.getId())
                 .facteurs(type.getFacteurs() != null ? type.getFacteurs().stream().map(facteurMapper::toFacteurResponse).collect(Collectors.toList()) : null)
+                .nbr_facteur(type.getFacteurs() != null ? type.getFacteurs().size(): 0)
                 .nom_type(type.getName())
                 .active(type.getActive())
+                .type_parent(type.getParent()!=null ? type.getParent().getName():"- - -")
                 .create(type.getCreatedDate().format(formatter))
                 .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
                 .update(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null)
@@ -70,6 +72,7 @@ public class TypeMapper {
         typeResponse.setUpdate(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null);
         typeResponse.setCreate(type.getCreatedDate() != null ? type.getCreatedDate().format(formatter) : null);
         typeResponse.setParent(type.getParent() != null ? type.getParent().getId() : null);
+
         return typeResponse;
     }
 
@@ -87,7 +90,9 @@ public class TypeMapper {
         return TypeResponse.builder()
                 .id(type.getId())
                 .nom_type(type.getName())
+                .type_parent(type.getParent()!=null ? type.getParent().getName():"- - -")
                 .files(new ArrayList<>())
+                .nbr_facteur(type.getFacteurs() != null ? type.getFacteurs().size(): 0)
                 .build();
     }
 
@@ -138,7 +143,7 @@ public class TypeMapper {
             res = new ArrayList<>();
             for (Type i : list) {
                 if (i.getParent() == null) {
-                    res.add(typeParentResponse_simple(i));
+                    res.add(typeParentResponse(i));
                 }
             }
             for (TypeResponse i : res) {
@@ -147,7 +152,7 @@ public class TypeMapper {
                         continue;
                     }
                     if (i.getId().equals(j.getParent().getId())) {
-                        i.getFiles().add(typeParentResponse_simple(j));
+                        i.getFiles().add(typeParentResponse_with_date_and_parent(j));
                     }
                 }
             }

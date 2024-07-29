@@ -177,7 +177,7 @@ public class TypeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "") String[] sortBy) {
         return ResponseEntity.ok(typeService.list_all_detail_trash(page, size, search, sortBy));
     }
 
