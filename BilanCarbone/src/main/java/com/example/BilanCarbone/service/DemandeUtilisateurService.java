@@ -40,14 +40,6 @@ public class DemandeUtilisateurService {
     @Value("${keycloak.realm}")
     private String realm;
 
-    /**
-     * Obtient un jeton d'accès.
-     *
-     * @return le jeton d'accès.
-     */
-    private String getAccessToken() {
-        return "";
-    }
 
     /**
      * Récupère toutes les demandes d'utilisateur avec pagination et recherche.
@@ -106,7 +98,13 @@ public class DemandeUtilisateurService {
             String URL = keycloakURL + "/admin/realms/" + realm + "/users";
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
+            String searchUrl = URL + "?email=" + demandeUtilisateur.getEmail();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<List> searchResponse = restTemplate.exchange(searchUrl, HttpMethod.GET, entity, List.class);
 
+            if (searchResponse.getStatusCode().is2xxSuccessful() && !searchResponse.getBody().isEmpty()) {
+                return false;
+            }
             Map<String, Object> userRepresentation = new HashMap<>();
             userRepresentation.put("username", demandeUtilisateur.getNomUtilisateur());
             userRepresentation.put("enabled", true);
