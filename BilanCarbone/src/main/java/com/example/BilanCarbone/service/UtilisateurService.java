@@ -59,11 +59,9 @@ public class UtilisateurService {
                 URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {});
 
         List<UserRepresentation> utilisateurs = response.getBody();
-        utilisateurs = utilisateurs.stream()
-                .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
-                .collect(Collectors.toList());
 
         List<UserRepresentation> filtredUtilisateur = search.isEmpty() ? utilisateurs : utilisateurs.stream()
+                .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
                 .filter(utilisateur -> utilisateur.getFirstName().contains(search) ||
                         utilisateur.getLastName().contains(search) ||
                         utilisateur.getUsername().contains(search))

@@ -27,7 +27,11 @@ public class DemandeUtilisateurController {
     public ResponseEntity<PageResponse<DemandeUtilisateur>> getDemandesUtilisateur(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
-            @RequestParam(defaultValue = "") String search) {
+            @RequestParam(defaultValue = "") String search,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader
+            ) {
+        //String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        System.out.println("Authorization Header: " + authorizationHeader);
         return ResponseEntity.ok(demandeUtilisateurService.getAllDemandeUtilisateur(page, size, search));
     }
 
