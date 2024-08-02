@@ -91,7 +91,6 @@ public class UtilisateurService {
     public boolean blockUtilisateur(String ID,String token){
         RestTemplate restTemplate = new RestTemplate();
         String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
-        System.out.println(URL);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<String> httpEntity = new HttpEntity<>(headers);
@@ -108,6 +107,19 @@ public class UtilisateurService {
         }
 
 
+        return false;
+    }
+    public boolean DeleteUtilisateur(String ID,String token){
+        RestTemplate restTemplate = new RestTemplate();
+        String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+        ResponseEntity<Void> response = restTemplate.exchange(
+                URL, HttpMethod.DELETE, httpEntity,Void.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return true;
+        }
         return false;
     }
 }
