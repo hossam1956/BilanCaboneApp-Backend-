@@ -27,6 +27,8 @@ public interface TypeRepository extends JpaRepository<Type, Long> {
     Page<Type> findAllByIsDeletedNotNull(Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndIsDeletedIsNotNull(String nom,Pageable pageable);
     List<Type> findAllByParentAndIsDeletedNotNull(Type parent);
+    Boolean existsByNameIgnoreCaseAndIsDeletedIsNull(String name);
+    Boolean existsByNameIgnoreCaseAndIdNotAndIsDeletedNotNull(String name,Long id);
 
 
 

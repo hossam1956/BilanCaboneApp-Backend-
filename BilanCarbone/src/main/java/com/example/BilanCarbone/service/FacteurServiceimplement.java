@@ -47,7 +47,7 @@ public class FacteurServiceimplement implements FacteurService {
     /**
      * Retrieves a paginated list of all active factors with optional search and sorting.
      *
-     * @param ge     Page number to retrieve.
+     * @param page     Page number to retrieve.
      * @param size   Number of factors per page.
      * @param search Optional search term to filter factors by name.
      * @param sortBy  Optional sorting parameters.
@@ -169,16 +169,16 @@ public class FacteurServiceimplement implements FacteurService {
     /**
      * Retrieves a list of active factors, optionally filtered by type ID.
      *
-     * @param facteurId Optional ID of the type to filter factors by. If not provided, retrieves all active factors.
+     * @param idtype Optional ID of the type to filter factors by. If not provided, retrieves all active factors.
      * @return List of {@link FacteurResponse} containing the active factors.
      * @throws EntityNotFoundException If the type with the specified ID does not exist.
      */
     @Override
-    public List<FacteurResponse> list_facteur(Long facteurId) {
+    public List<FacteurResponse> list_facteur(Long idtype) {
         List<Facteur> list;
-        if (facteurId > 0) {
-            Type type = typeRepository.findById(facteurId).orElseThrow(
-                    () -> new EntityNotFoundException("type not found with id: " + facteurId)
+        if (idtype > 0) {
+            Type type = typeRepository.findById(idtype).orElseThrow(
+                    () -> new EntityNotFoundException("type not found with id: " + idtype)
             );
             list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNull(type);
         } else {
@@ -240,8 +240,28 @@ public class FacteurServiceimplement implements FacteurService {
         if (facteur.getType() != null && facteur.getType().getIsDeleted() != null) {
             throw new OperationNotPermittedException("vous devez d'abord récupérer le type son nom :" + facteur.getNom() + ", et son id :" + facteur.getId());
         }
+        Boolean exit=search_facteur(facteur.getNom(),0);
+        if(exit){
+            throw new OperationNotPermittedException("Il y en a déjà un similaire de cette facteur");
+        }
         facteur.setIsDeleted(null);
         return facteurMapper.toFacteurResponse(facteurRepository.save(facteur));
+    }
+    /**
+     * Vérifie l'existence d'un facteur avec le nom spécifié, en ignorant la casse, et s'assure que le champ
+     * `isDeleted` est `null`.
+     *
+     * @param search le nom du facteur à rechercher
+     * @return `true` si un facteur avec le nom spécifié existe et n'est pas supprimé, sinon `false`
+     */
+    @Override
+    public Boolean search_facteur(String search,int id) {
+        Facteur facteur=facteurRepository.findByIdAndIsDeletedIsNull((long) id);
+        if(facteur==null){
+            return facteurRepository.existsByNomIgnoreCaseAndIsDeletedIsNull(search);
+        }
+        return facteurRepository.existsAllByNomIgnoreCaseAndIdNotAndIsDeletedNotNull(search,(long)id);
+
     }
 
     /**
@@ -333,7 +353,7 @@ public class FacteurServiceimplement implements FacteurService {
     private Facteur findbyid_deleted(Long id) {
         Facteur facteur = facteurRepository.findByIdAndIsDeletedNotNull(id);
         if (facteur == null) {
-            throw new EntityNotFoundException("facteur not found with id: " + id);
+            throw  new EntityNotFoundException("facteur not found with id: " + id);
         }
         return facteur;
     }
