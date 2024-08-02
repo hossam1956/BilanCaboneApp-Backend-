@@ -39,4 +39,12 @@ public class UtilisateurController {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
         return utilisateurService.getAllUtilisateur(page, size, search, token);
     }
+    @PutMapping
+    public boolean blockUtilisateur(
+          @RequestParam(defaultValue = "") String ID,
+          @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
+    ) {
+        String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        return utilisateurService.blockUtilisateur(ID,token);
+    }
 }

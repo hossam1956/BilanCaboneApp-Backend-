@@ -59,9 +59,11 @@ public class UtilisateurService {
                 URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {});
 
         List<UserRepresentation> utilisateurs = response.getBody();
+        utilisateurs = utilisateurs.stream()
+                .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
+                .collect(Collectors.toList());
 
         List<UserRepresentation> filtredUtilisateur = search.isEmpty() ? utilisateurs : utilisateurs.stream()
-                .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
                 .filter(utilisateur -> utilisateur.getFirstName().contains(search) ||
                         utilisateur.getLastName().contains(search) ||
                         utilisateur.getUsername().contains(search))
@@ -84,5 +86,28 @@ public class UtilisateurService {
                 .first(isFirst)
                 .last(isLast)
                 .build();
+    }
+
+    public boolean blockUtilisateur(String ID,String token){
+        RestTemplate restTemplate = new RestTemplate();
+        String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
+        System.out.println(URL);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+        ResponseEntity<UserRepresentation> response = restTemplate.exchange(
+                URL, HttpMethod.GET, httpEntity,UserRepresentation.class);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            UserRepresentation user=response.getBody();
+            boolean enabled=user.isEnabled();
+            user.setEnabled(!enabled);
+            HttpEntity<UserRepresentation> updateEntity = new HttpEntity<>(user,headers);
+            ResponseEntity<Void> responseUpdate = restTemplate.exchange(
+                    URL, HttpMethod.PUT, updateEntity,Void.class);
+            return true;
+        }
+
+
+        return false;
     }
 }
