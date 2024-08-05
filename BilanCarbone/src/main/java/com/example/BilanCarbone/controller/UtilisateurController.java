@@ -9,10 +9,9 @@ import org.springframework.http.HttpHeaders;
 
 /**
  * Contrôleur pour gérer les requêtes liées aux utilisateurs.
- * Ce contrôleur fournit des points d'accès pour récupérer les utilisateurs.
+ * Ce contrôleur fournit des points d'accès pour récupérer, bloquer et supprimer des utilisateurs.
  *
  * @author CHALABI Hossam
- *
  */
 @RestController
 @RequestMapping("api/utilisateur")
@@ -39,20 +38,36 @@ public class UtilisateurController {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
         return utilisateurService.getAllUtilisateur(page, size, search, token);
     }
-    @PutMapping
+
+    /**
+     * Bloque un utilisateur en fonction de son identifiant.
+     *
+     * @param ID l'identifiant de l'utilisateur à bloquer
+     * @param authorizationHeader l'en-tête d'autorisation contenant le jeton Bearer
+     * @return true si l'utilisateur a été bloqué avec succès, sinon false
+     */
+    @PutMapping("block")
     public boolean blockUtilisateur(
-          @RequestParam(defaultValue = "") String ID,
-          @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
+            @RequestParam(defaultValue = "") String ID,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        return utilisateurService.blockUtilisateur(ID,token);
+        return utilisateurService.blockUtilisateur(ID, token);
     }
+
+    /**
+     * Supprime un utilisateur en fonction de son identifiant.
+     *
+     * @param ID l'identifiant de l'utilisateur à supprimer
+     * @param authorizationHeader l'en-tête d'autorisation contenant le jeton Bearer
+     * @return true si l'utilisateur a été supprimé avec succès, sinon false
+     */
     @DeleteMapping
     public boolean deleteUtilisateur(
             @RequestParam(defaultValue = "") String ID,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        return utilisateurService.DeleteUtilisateur(ID,token);
+        return utilisateurService.DeleteUtilisateur(ID, token);
     }
 }

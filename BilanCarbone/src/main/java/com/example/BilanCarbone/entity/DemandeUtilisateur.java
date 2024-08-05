@@ -1,7 +1,10 @@
 package com.example.BilanCarbone.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -11,7 +14,12 @@ import java.time.LocalDateTime;
  *
  * @Author CHALABI Hossam
  */
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
+@Builder
 public class DemandeUtilisateur {
 
     /**
@@ -69,6 +77,9 @@ public class DemandeUtilisateur {
     @NotEmpty
     private String role;
 
+   @ManyToOne
+   @JoinColumn(name="entreprise_id", nullable=false)
+    private Entreprise entreprise;
     /**
      * Le mot de passe de l'utilisateur.
      * Ce champ est requis.
@@ -78,97 +89,10 @@ public class DemandeUtilisateur {
     private String password;
 
     /**
-     * Constructeur avec tous les champs.
-     *
-     * @param id l'identifiant unique
-     * @param nomUtilisateur le nom d'utilisateur
-     * @param email l'email
-     * @param prenom le prénom
-     * @param nom le nom de famille
-     * @param sendDate la date d'envoi
-     * @param role le rôle
-     * @param password le mot de passe
+     * Le champs responsable de sauvgarder le mot de passe de utilisateur avant qu'il soit encodé afin de
+     * permettre la création du compte utilisateur sur keycloak server
      */
-    public DemandeUtilisateur(Long id, @NotEmpty(message = "Nom Utilisateur doit être spécifier") String nomUtilisateur, @NotEmpty(message = "Email doit être spécifier") String email, @NotEmpty(message = "Prenom doit être spécifier") String prenom, @NotEmpty(message = "Nom doit être spécifier") String nom, LocalDateTime sendDate, @NotEmpty String role, @NotEmpty(message = "Password doit être spécifier") String password) {
-        this.id = id;
-        this.nomUtilisateur = nomUtilisateur;
-        this.email = email;
-        this.prenom = prenom;
-        this.nom = nom;
-        this.sendDate = sendDate;
-        this.role = role;
-        this.password = password;
-    }
+    @JsonIgnore
+    private String rawPassword;
 
-    /**
-     * Constructeur par défaut.
-     */
-    public DemandeUtilisateur() {
-    }
-
-    // Getters et Setters
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public @NotEmpty(message = "Nom Utilisateur doit être spécifier") String getNomUtilisateur() {
-        return this.nomUtilisateur;
-    }
-
-    public @NotEmpty(message = "Email doit être spécifier") String getEmail() {
-        return this.email;
-    }
-
-    public @NotEmpty(message = "Prenom doit être spécifier") String getPrenom() {
-        return this.prenom;
-    }
-
-    public @NotEmpty(message = "Nom doit être spécifier") String getNom() {
-        return this.nom;
-    }
-
-    public LocalDateTime getSendDate() {
-        return this.sendDate;
-    }
-
-    public @NotEmpty String getRole() {
-        return this.role;
-    }
-
-    public @NotEmpty(message = "Password doit être spécifier") String getPassword() {
-        return this.password;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setNomUtilisateur(@NotEmpty(message = "Nom Utilisateur doit être spécifier") String nomUtilisateur) {
-        this.nomUtilisateur = nomUtilisateur;
-    }
-
-    public void setEmail(@NotEmpty(message = "Email doit être spécifier") String email) {
-        this.email = email;
-    }
-
-    public void setPrenom(@NotEmpty(message = "Prenom doit être spécifier") String prenom) {
-        this.prenom = prenom;
-    }
-
-    public void setNom(@NotEmpty(message = "Nom doit être spécifier") String nom) {
-        this.nom = nom;
-    }
-
-    public void setSendDate(LocalDateTime sendDate) {
-        this.sendDate = sendDate;
-    }
-
-    public void setRole(@NotEmpty String role) {
-        this.role = role;
-    }
-
-    public void setPassword(@NotEmpty(message = "Password doit être spécifier") String password) {
-        this.password = password;
-    }
 }

@@ -13,17 +13,15 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Service pour gérer les utilisateurs.
- * Ce service fournit des méthodes pour récupérer des utilisateurs depuis Keycloak.
- * <p>
+ * Ce service fournit des méthodes pour récupérer, bloquer et supprimer des utilisateurs depuis Keycloak.
+ *
  * @author CHALABI Hossam
- * </p>
  */
 @Service
 public class UtilisateurService {
@@ -49,7 +47,6 @@ public class UtilisateurService {
     @Transactional
     public PageResponse<UserRepresentation> getAllUtilisateur(int currentpage, int size, String search, String token) {
         Pageable pageable = PageRequest.of(currentpage, size);
-        RestTemplate restTemplate = new RestTemplate();
         String URL = keycloakURL + "/admin/realms/" + realm + "/users";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
@@ -88,38 +85,46 @@ public class UtilisateurService {
                 .build();
     }
 
-    public boolean blockUtilisateur(String ID,String token){
-        RestTemplate restTemplate = new RestTemplate();
-        String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
+    /**
+     * Bloque ou débloque un utilisateur en fonction de son identifiant.
+     *
+     * @param ID l'identifiant de l'utilisateur à bloquer ou débloquer
+     * @param token le jeton d'authentification Bearer
+     * @return true si l'utilisateur a été bloqué ou débloqué avec succès, sinon false
+     */
+    public boolean blockUtilisateur(String ID, String token) {
+        String URL = keycloakURL + "/admin/realms/" + realm + "/users/" + ID;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<String> httpEntity = new HttpEntity<>(headers);
         ResponseEntity<UserRepresentation> response = restTemplate.exchange(
-                URL, HttpMethod.GET, httpEntity,UserRepresentation.class);
+                URL, HttpMethod.GET, httpEntity, UserRepresentation.class);
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            UserRepresentation user=response.getBody();
-            boolean enabled=user.isEnabled();
+            UserRepresentation user = response.getBody();
+            boolean enabled = user.isEnabled();
             user.setEnabled(!enabled);
-            HttpEntity<UserRepresentation> updateEntity = new HttpEntity<>(user,headers);
+            HttpEntity<UserRepresentation> updateEntity = new HttpEntity<>(user, headers);
             ResponseEntity<Void> responseUpdate = restTemplate.exchange(
-                    URL, HttpMethod.PUT, updateEntity,Void.class);
+                    URL, HttpMethod.PUT, updateEntity, Void.class);
             return true;
         }
-
-
         return false;
     }
-    public boolean DeleteUtilisateur(String ID,String token){
-        RestTemplate restTemplate = new RestTemplate();
-        String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
+
+    /**
+     * Supprime un utilisateur en fonction de son identifiant.
+     *
+     * @param ID l'identifiant de l'utilisateur à supprimer
+     * @param token le jeton d'authentification Bearer
+     * @return true si l'utilisateur a été supprimé avec succès, sinon false
+     */
+    public boolean DeleteUtilisateur(String ID, String token) {
+        String URL = keycloakURL + "/admin/realms/" + realm + "/users/" + ID;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
         ResponseEntity<Void> response = restTemplate.exchange(
-                URL, HttpMethod.DELETE, httpEntity,Void.class);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return true;
-        }
-        return false;
+                URL, HttpMethod.DELETE, httpEntity, Void.class);
+        return response.getStatusCode().is2xxSuccessful();
     }
 }
