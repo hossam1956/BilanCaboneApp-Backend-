@@ -1,6 +1,7 @@
 package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.common.PageResponse;
+import com.example.BilanCarbone.config.CustomUserRepresentation;
 import com.example.BilanCarbone.entity.Utilisateur;
 import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.service.UtilisateurService;
@@ -34,10 +35,10 @@ public class UtilisateurController {
      * @param size le nombre d'utilisateurs par page, la valeur par défaut est 8
      * @param search le terme de recherche pour filtrer les utilisateurs par prénom ou nom, la valeur par défaut est vide
      * @param authorizationHeader l'en-tête d'autorisation contenant le jeton Bearer
-     * @return un objet PageResponse contenant la liste paginée des objets UserRepresentation
+     * @return un objet PageResponse contenant la liste paginée des objets CustomUserRepresentation
      */
     @GetMapping
-    public PageResponse<UserRepresentation> getAllUtilisateur(
+    public PageResponse<CustomUserRepresentation> getAllUtilisateur(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
@@ -68,6 +69,7 @@ public class UtilisateurController {
      * @param ID l'identifiant de l'utilisateur à supprimer
      * @param authorizationHeader l'en-tête d'autorisation contenant le jeton Bearer
      * @return true si l'utilisateur a été supprimé avec succès, sinon false
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé dans la table utilisateur
      */
     @DeleteMapping
     public boolean deleteUtilisateur(
@@ -75,19 +77,12 @@ public class UtilisateurController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        Utilisateur utilisateur= utilisateurRepository.findById(ID).isPresent()?utilisateurRepository.findById(ID).get():null;
-        if(utilisateur !=null){
+        Utilisateur utilisateur = utilisateurRepository.findById(ID).isPresent() ? utilisateurRepository.findById(ID).get() : null;
+        if (utilisateur != null) {
             utilisateurRepository.delete(utilisateur);
             return utilisateurService.DeleteUtilisateur(ID, token);
+        } else {
+            throw new RuntimeException("L'utilisateur n'est pas trouvé dans la table utilisateur");
         }
-        else{
-            throw new RuntimeException("The user is not found in utilisateur Table");
-        }
-
-
-    }
-    @GetMapping("utilisateur")
-    public List<Utilisateur> getAllTest(){
-        return utilisateurRepository.findAll();
     }
 }
