@@ -1,11 +1,16 @@
 package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.common.PageResponse;
+import com.example.BilanCarbone.entity.Utilisateur;
+import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.service.UtilisateurService;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.InvalidPropertyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
+
+import java.util.List;
 
 /**
  * Contrôleur pour gérer les requêtes liées aux utilisateurs.
@@ -17,6 +22,8 @@ import org.springframework.http.HttpHeaders;
 @RequestMapping("api/utilisateur")
 public class UtilisateurController {
 
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
     @Autowired
     private UtilisateurService utilisateurService;
 
@@ -68,6 +75,19 @@ public class UtilisateurController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-        return utilisateurService.DeleteUtilisateur(ID, token);
+        Utilisateur utilisateur= utilisateurRepository.findById(ID).isPresent()?utilisateurRepository.findById(ID).get():null;
+        if(utilisateur !=null){
+            utilisateurRepository.delete(utilisateur);
+            return utilisateurService.DeleteUtilisateur(ID, token);
+        }
+        else{
+            throw new RuntimeException("The user is not found in utilisateur Table");
+        }
+
+
+    }
+    @GetMapping("utilisateur")
+    public List<Utilisateur> getAllTest(){
+        return utilisateurRepository.findAll();
     }
 }
