@@ -14,20 +14,21 @@ public class FacteurResponse {
     private BigDecimal emissionFactor;
     private Boolean active;
     private Long type;
+    private String parent_type;
     private String creat_at;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String update_at;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String deleted;
 
-
-    public FacteurResponse(Long id, String nom_facteur, String unit, BigDecimal emissionFactor, Boolean active, Long type, String creat_at, String update_at, String deleted) {
+    public FacteurResponse(Long id, String nom_facteur, String unit, BigDecimal emissionFactor, Boolean active, Long type, String parent_type, String creat_at, String update_at, String deleted) {
         this.id = id;
         this.nom_facteur = nom_facteur;
         this.unit = unit;
         this.emissionFactor = emissionFactor;
         this.active = active;
         this.type = type;
+        this.parent_type = parent_type;
         this.creat_at = creat_at;
         this.update_at = update_at;
         this.deleted = deleted;
@@ -64,6 +65,10 @@ public class FacteurResponse {
         return this.type;
     }
 
+    public String getParent_type() {
+        return this.parent_type;
+    }
+
     public String getCreat_at() {
         return this.creat_at;
     }
@@ -98,6 +103,10 @@ public class FacteurResponse {
 
     public void setType(Long type) {
         this.type = type;
+    }
+
+    public void setParent_type(String parent_type) {
+        this.parent_type = parent_type;
     }
 
     public void setCreat_at(String creat_at) {
@@ -137,6 +146,10 @@ public class FacteurResponse {
         final Object this$type = this.getType();
         final Object other$type = other.getType();
         if (this$type == null ? other$type != null : !this$type.equals(other$type)) return false;
+        final Object this$parent_type = this.getParent_type();
+        final Object other$parent_type = other.getParent_type();
+        if (this$parent_type == null ? other$parent_type != null : !this$parent_type.equals(other$parent_type))
+            return false;
         final Object this$creat_at = this.getCreat_at();
         final Object other$creat_at = other.getCreat_at();
         if (this$creat_at == null ? other$creat_at != null : !this$creat_at.equals(other$creat_at)) return false;
@@ -168,6 +181,8 @@ public class FacteurResponse {
         result = result * PRIME + ($active == null ? 43 : $active.hashCode());
         final Object $type = this.getType();
         result = result * PRIME + ($type == null ? 43 : $type.hashCode());
+        final Object $parent_type = this.getParent_type();
+        result = result * PRIME + ($parent_type == null ? 43 : $parent_type.hashCode());
         final Object $creat_at = this.getCreat_at();
         result = result * PRIME + ($creat_at == null ? 43 : $creat_at.hashCode());
         final Object $update_at = this.getUpdate_at();
@@ -178,7 +193,7 @@ public class FacteurResponse {
     }
 
     public String toString() {
-        return "FacteurResponse(id=" + this.getId() + ", nom_facteur=" + this.getNom_facteur() + ", unit=" + this.getUnit() + ", emissionFactor=" + this.getEmissionFactor() + ", active=" + this.getActive() + ", type=" + this.getType() + ", creat_at=" + this.getCreat_at() + ", update_at=" + this.getUpdate_at() + ", deleted=" + this.getDeleted() + ")";
+        return "FacteurResponse(id=" + this.getId() + ", nom_facteur=" + this.getNom_facteur() + ", unit=" + this.getUnit() + ", emissionFactor=" + this.getEmissionFactor() + ", active=" + this.getActive() + ", type=" + this.getType() + ", parent_type=" + this.getParent_type() + ", creat_at=" + this.getCreat_at() + ", update_at=" + this.getUpdate_at() + ", deleted=" + this.getDeleted() + ")";
     }
 
     public static class FacteurResponseBuilder {
@@ -188,6 +203,7 @@ public class FacteurResponse {
         private BigDecimal emissionFactor;
         private Boolean active;
         private Long type;
+        private String parent_type;
         private String creat_at;
         private String update_at;
         private String deleted;
@@ -225,6 +241,11 @@ public class FacteurResponse {
             return this;
         }
 
+        public FacteurResponseBuilder parent_type(String parent_type) {
+            this.parent_type = parent_type;
+            return this;
+        }
+
         public FacteurResponseBuilder creat_at(String creat_at) {
             this.creat_at = creat_at;
             return this;
@@ -241,11 +262,11 @@ public class FacteurResponse {
         }
 
         public FacteurResponse build() {
-            return new FacteurResponse(this.id, this.nom_facteur, this.unit, this.emissionFactor, this.active, this.type, this.creat_at, this.update_at, this.deleted);
+            return new FacteurResponse(this.id, this.nom_facteur, this.unit, this.emissionFactor, this.active, this.type, this.parent_type, this.creat_at, this.update_at, this.deleted);
         }
 
         public String toString() {
-            return "FacteurResponse.FacteurResponseBuilder(id=" + this.id + ", nom_facteur=" + this.nom_facteur + ", unit=" + this.unit + ", emissionFactor=" + this.emissionFactor + ", active=" + this.active + ", type=" + this.type + ", creat_at=" + this.creat_at + ", update_at=" + this.update_at + ", deleted=" + this.deleted + ")";
+            return "FacteurResponse.FacteurResponseBuilder(id=" + this.id + ", nom_facteur=" + this.nom_facteur + ", unit=" + this.unit + ", emissionFactor=" + this.emissionFactor + ", active=" + this.active + ", type=" + this.type + ", parent_type=" + this.parent_type + ", creat_at=" + this.creat_at + ", update_at=" + this.update_at + ", deleted=" + this.deleted + ")";
         }
     }
 }

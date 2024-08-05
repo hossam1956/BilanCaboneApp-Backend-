@@ -177,7 +177,7 @@ public class TypeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "") String[] sortBy) {
         return ResponseEntity.ok(typeService.list_all_detail_trash(page, size, search, sortBy));
     }
 
@@ -191,5 +191,19 @@ public class TypeController {
     @PutMapping("/{id}")
     public ResponseEntity<TypeResponse> update_type(@PathVariable Long id, @RequestBody TypeRequest typeRequest) {
         return ResponseEntity.ok(typeService.update_type_detail(id, typeRequest));
+    }
+    /**
+     *  chercher d'un type spécifique par son nom
+     *
+     * @param search le nom de type
+     * @return Une réponse contenant True si existe ou false si n'esxit pas
+     * */
+    @GetMapping("/search")
+    public ResponseEntity<Boolean> search(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int id) {
+        Boolean res=typeService.search_type(search,id);
+
+        return ResponseEntity.ok(res);
     }
 }

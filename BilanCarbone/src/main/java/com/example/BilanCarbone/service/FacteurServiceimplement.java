@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,31 +47,47 @@ public class FacteurServiceimplement implements FacteurService {
     /**
      * Retrieves a paginated list of all active factors with optional search and sorting.
      *
-     * @param ge     Page number to retrieve.
+     * @param page     Page number to retrieve.
      * @param size   Number of factors per page.
      * @param search Optional search term to filter factors by name.
-     * @param order  Optional sorting parameters.
+     * @param sortBy  Optional sorting parameters.
      * @return A {@link PageResponse} containing the paginated list of {@link FacteurResponse}.
      */
     @Override
-    public PageResponse<FacteurResponse> getAllFacteurs(int ge, int size, String search, String... order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(ge, size, sort);
-        Page<Facteur> page = search.isEmpty() ?
-                facteurRepository.findAllByIsDeletedIsNull(pe) :
-                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(), pe);
+    public PageResponse<FacteurResponse> getAllFacteurs(int page, int size, String search, String... sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
 
-        List<FacteurResponse> res = page.stream().map(facteurMapper::toFacteurResponse).toList();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
+        }
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
+
+        Page<Facteur> facteurPage = search.isEmpty() ?
+                facteurRepository.findAllByIsDeletedIsNull(pageable) :
+                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(), pageable);
+
+        List<FacteurResponse> responseList = facteurPage.stream()
+                .map(facteurMapper::toFacteurResponse)
+                .toList();
+
         return PageResponse.<FacteurResponse>builder()
-                .content(res)
-                .number(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
+                .content(responseList)
+                .number(facteurPage.getNumber())
+                .size(facteurPage.getSize())
+                .totalElements(facteurPage.getTotalElements())
+                .totalPages(facteurPage.getTotalPages())
+                .first(facteurPage.isFirst())
+                .last(facteurPage.isLast())
                 .build();
     }
+
+
 
     /**
      * Retrieves a factor by its ID.
@@ -152,16 +169,16 @@ public class FacteurServiceimplement implements FacteurService {
     /**
      * Retrieves a list of active factors, optionally filtered by type ID.
      *
-     * @param facteurId Optional ID of the type to filter factors by. If not provided, retrieves all active factors.
+     * @param idtype Optional ID of the type to filter factors by. If not provided, retrieves all active factors.
      * @return List of {@link FacteurResponse} containing the active factors.
      * @throws EntityNotFoundException If the type with the specified ID does not exist.
      */
     @Override
-    public List<FacteurResponse> list_facteur(Long facteurId) {
+    public List<FacteurResponse> list_facteur(Long idtype) {
         List<Facteur> list;
-        if (facteurId > 0) {
-            Type type = typeRepository.findById(facteurId).orElseThrow(
-                    () -> new EntityNotFoundException("type not found with id: " + facteurId)
+        if (idtype > 0) {
+            Type type = typeRepository.findById(idtype).orElseThrow(
+                    () -> new EntityNotFoundException("type not found with id: " + idtype)
             );
             list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNull(type);
         } else {
@@ -223,8 +240,28 @@ public class FacteurServiceimplement implements FacteurService {
         if (facteur.getType() != null && facteur.getType().getIsDeleted() != null) {
             throw new OperationNotPermittedException("vous devez d'abord récupérer le type son nom :" + facteur.getNom() + ", et son id :" + facteur.getId());
         }
+        Boolean exit=search_facteur(facteur.getNom(),0);
+        if(exit){
+            throw new OperationNotPermittedException("Il y en a déjà un similaire de cette facteur");
+        }
         facteur.setIsDeleted(null);
         return facteurMapper.toFacteurResponse(facteurRepository.save(facteur));
+    }
+    /**
+     * Vérifie l'existence d'un facteur avec le nom spécifié, en ignorant la casse, et s'assure que le champ
+     * `isDeleted` est `null`.
+     *
+     * @param search le nom du facteur à rechercher
+     * @return `true` si un facteur avec le nom spécifié existe et n'est pas supprimé, sinon `false`
+     */
+    @Override
+    public Boolean search_facteur(String search,int id) {
+        Facteur facteur=facteurRepository.findByIdAndIsDeletedIsNull((long) id);
+        if(facteur==null){
+            return facteurRepository.existsByNomIgnoreCaseAndIsDeletedIsNull(search);
+        }
+        return facteurRepository.existsAllByNomIgnoreCaseAndIdNotAndIsDeletedNotNull(search,(long)id);
+
     }
 
     /**
@@ -233,16 +270,25 @@ public class FacteurServiceimplement implements FacteurService {
      * @param ge     Page number to retrieve.
      * @param size   Number of factors per page.
      * @param search Optional search term to filter factors by name.
-     * @param order  Optional sorting parameters.
+     * @param sortBy  Optional sorting parameters.
      * @return A {@link PageResponse} containing the paginated list of {@link FacteurResponse}.
      */
     @Override
-    public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int ge, int size, String search, String... order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(ge, size, sort);
+    public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int ge, int size, String search, String... sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
+        }
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(ge, size, Sort.by(orders));
         Page<Facteur> page = search.isEmpty() ?
-                facteurRepository.findAllByIsDeletedNotNull(pe) :
-                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(search.toLowerCase().trim(), pe);
+                facteurRepository.findAllByIsDeletedNotNull(pageable) :
+                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(search.toLowerCase().trim(), pageable);
 
         List<FacteurResponse> res = page.stream().map(facteurMapper::toFacteurResponse).toList();
         return PageResponse.<FacteurResponse>builder()
@@ -274,7 +320,7 @@ public class FacteurServiceimplement implements FacteurService {
         }
         if (!activate) {
             Type type = facteur.getType();
-            if (!type.getActive()) {
+            if ( type != null && !type.getActive()) {
                 throw new OperationNotPermittedException("Le type " + id + " est désactivé (active ce type)");
             }
         }
@@ -307,7 +353,7 @@ public class FacteurServiceimplement implements FacteurService {
     private Facteur findbyid_deleted(Long id) {
         Facteur facteur = facteurRepository.findByIdAndIsDeletedNotNull(id);
         if (facteur == null) {
-            throw new EntityNotFoundException("facteur not found with id: " + id);
+            throw  new EntityNotFoundException("facteur not found with id: " + id);
         }
         return facteur;
     }

@@ -19,22 +19,28 @@ public class TypeResponse {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Long parent;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String type_parent;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<FacteurResponse> facteurs;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String deleted;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String update;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private int nbr_facteur;
 
-    public TypeResponse(Long id, String nom_type, Boolean active, String create, List<TypeResponse> files, Long parent, List<FacteurResponse> facteurs, String deleted, String update) {
+    public TypeResponse(Long id, String nom_type, Boolean active, String create, List<TypeResponse> files, Long parent, String type_parent, List<FacteurResponse> facteurs, String deleted, String update, int nbr_facteur) {
         this.id = id;
         this.nom_type = nom_type;
         this.active = active;
         this.create = create;
         this.files = files;
         this.parent = parent;
+        this.type_parent = type_parent;
         this.facteurs = facteurs;
         this.deleted = deleted;
         this.update = update;
+        this.nbr_facteur = nbr_facteur;
     }
 
     public TypeResponse() {
@@ -77,6 +83,10 @@ public class TypeResponse {
         return this.parent;
     }
 
+    public String getType_parent() {
+        return this.type_parent;
+    }
+
     public List<FacteurResponse> getFacteurs() {
         return this.facteurs;
     }
@@ -87,6 +97,10 @@ public class TypeResponse {
 
     public String getUpdate() {
         return this.update;
+    }
+
+    public int getNbr_facteur() {
+        return this.nbr_facteur;
     }
 
     public void setId(Long id) {
@@ -113,6 +127,10 @@ public class TypeResponse {
         this.parent = parent;
     }
 
+    public void setType_parent(String type_parent) {
+        this.type_parent = type_parent;
+    }
+
     public void setFacteurs(List<FacteurResponse> facteurs) {
         this.facteurs = facteurs;
     }
@@ -123,6 +141,10 @@ public class TypeResponse {
 
     public void setUpdate(String update) {
         this.update = update;
+    }
+
+    public void setNbr_facteur(int nbr_facteur) {
+        this.nbr_facteur = nbr_facteur;
     }
 
     public boolean equals(final Object o) {
@@ -148,6 +170,10 @@ public class TypeResponse {
         final Object this$parent = this.getParent();
         final Object other$parent = other.getParent();
         if (this$parent == null ? other$parent != null : !this$parent.equals(other$parent)) return false;
+        final Object this$type_parent = this.getType_parent();
+        final Object other$type_parent = other.getType_parent();
+        if (this$type_parent == null ? other$type_parent != null : !this$type_parent.equals(other$type_parent))
+            return false;
         final Object this$facteurs = this.getFacteurs();
         final Object other$facteurs = other.getFacteurs();
         if (this$facteurs == null ? other$facteurs != null : !this$facteurs.equals(other$facteurs)) return false;
@@ -157,6 +183,7 @@ public class TypeResponse {
         final Object this$update = this.getUpdate();
         final Object other$update = other.getUpdate();
         if (this$update == null ? other$update != null : !this$update.equals(other$update)) return false;
+        if (this.getNbr_facteur() != other.getNbr_facteur()) return false;
         return true;
     }
 
@@ -179,17 +206,20 @@ public class TypeResponse {
         result = result * PRIME + ($files == null ? 43 : $files.hashCode());
         final Object $parent = this.getParent();
         result = result * PRIME + ($parent == null ? 43 : $parent.hashCode());
+        final Object $type_parent = this.getType_parent();
+        result = result * PRIME + ($type_parent == null ? 43 : $type_parent.hashCode());
         final Object $facteurs = this.getFacteurs();
         result = result * PRIME + ($facteurs == null ? 43 : $facteurs.hashCode());
         final Object $deleted = this.getDeleted();
         result = result * PRIME + ($deleted == null ? 43 : $deleted.hashCode());
         final Object $update = this.getUpdate();
         result = result * PRIME + ($update == null ? 43 : $update.hashCode());
+        result = result * PRIME + this.getNbr_facteur();
         return result;
     }
 
     public String toString() {
-        return "TypeResponse(id=" + this.getId() + ", nom_type=" + this.getNom_type() + ", active=" + this.getActive() + ", create=" + this.getCreate() + ", files=" + this.getFiles() + ", parent=" + this.getParent() + ", facteurs=" + this.getFacteurs() + ", deleted=" + this.getDeleted() + ", update=" + this.getUpdate() + ")";
+        return "TypeResponse(id=" + this.getId() + ", nom_type=" + this.getNom_type() + ", active=" + this.getActive() + ", create=" + this.getCreate() + ", files=" + this.getFiles() + ", parent=" + this.getParent() + ", type_parent=" + this.getType_parent() + ", facteurs=" + this.getFacteurs() + ", deleted=" + this.getDeleted() + ", update=" + this.getUpdate() + ", nbr_facteur=" + this.getNbr_facteur() + ")";
     }
 
     public static class TypeResponseBuilder {
@@ -199,9 +229,11 @@ public class TypeResponse {
         private String create;
         private List<TypeResponse> files;
         private Long parent;
+        private String type_parent;
         private List<FacteurResponse> facteurs;
         private String deleted;
         private String update;
+        private int nbr_facteur;
 
         TypeResponseBuilder() {
         }
@@ -236,6 +268,11 @@ public class TypeResponse {
             return this;
         }
 
+        public TypeResponseBuilder type_parent(String type_parent) {
+            this.type_parent = type_parent;
+            return this;
+        }
+
         public TypeResponseBuilder facteurs(List<FacteurResponse> facteurs) {
             this.facteurs = facteurs;
             return this;
@@ -251,12 +288,17 @@ public class TypeResponse {
             return this;
         }
 
+        public TypeResponseBuilder nbr_facteur(int nbr_facteur) {
+            this.nbr_facteur = nbr_facteur;
+            return this;
+        }
+
         public TypeResponse build() {
-            return new TypeResponse(this.id, this.nom_type, this.active, this.create, this.files, this.parent, this.facteurs, this.deleted, this.update);
+            return new TypeResponse(this.id, this.nom_type, this.active, this.create, this.files, this.parent, this.type_parent, this.facteurs, this.deleted, this.update, this.nbr_facteur);
         }
 
         public String toString() {
-            return "TypeResponse.TypeResponseBuilder(id=" + this.id + ", nom_type=" + this.nom_type + ", active=" + this.active + ", create=" + this.create + ", files=" + this.files + ", parent=" + this.parent + ", facteurs=" + this.facteurs + ", deleted=" + this.deleted + ", update=" + this.update + ")";
+            return "TypeResponse.TypeResponseBuilder(id=" + this.id + ", nom_type=" + this.nom_type + ", active=" + this.active + ", create=" + this.create + ", files=" + this.files + ", parent=" + this.parent + ", type_parent=" + this.type_parent + ", facteurs=" + this.facteurs + ", deleted=" + this.deleted + ", update=" + this.update + ", nbr_facteur=" + this.nbr_facteur + ")";
         }
     }
 }

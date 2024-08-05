@@ -20,13 +20,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * @author Oussama
- **/
 
 /**
  * Implémentation des services liés aux entités Type.
@@ -69,18 +67,27 @@ public class TypeServiceimplement implements TypeService {
      * @param page   Numéro de la page à récupérer (commence à 0).
      * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order  Ordre de tri des résultats.
+     * @param sortBy  Ordre de tri des résultats.
      * @return PageResponse<TypeResponse> Liste paginée de tous les types.
      */
     @Override
-    public PageResponse<TypeResponse> list_all(int page, int size, String search, String... order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size, sort);
+    public PageResponse<TypeResponse> list_all(int page, int size, String search, String... sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
+        }
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
         Page<Type> respage = null;
         if (search != null && !search.isEmpty()) {
-            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pe);
+            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pageable);
         } else {
-            respage = typeRepository.findAllByIsDeletedIsNull(pe);
+            respage = typeRepository.findAllByIsDeletedIsNull(pageable);
         }
         return getTypeResponsePageResponse(respage);
     }
@@ -134,9 +141,24 @@ public class TypeServiceimplement implements TypeService {
     public TypeResponse get_type_detail(Long id) {
         Type res = findbyid(id);
         List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
+
+        // Remove deleted facteurs from child types
+        for (Type t : list) {
+            t.setFacteurs(t.getFacteurs().stream()
+                    .filter(f -> f.getIsDeleted() == null)
+                    .collect(Collectors.toList()));
+        }
+
+        // Check if there are child types
         if (!list.isEmpty()) {
             return typeMapper.typeParentResponse(res, list);
         }
+
+        // Remove deleted facteurs from the parent type
+        res.setFacteurs(res.getFacteurs().stream()
+                .filter(f -> f.getIsDeleted() == null)
+                .collect(Collectors.toList()));
+
         return typeMapper.typeParentResponse(res);
     }
 
@@ -170,9 +192,18 @@ public class TypeServiceimplement implements TypeService {
             res = res.getParent();
         }
         List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
+        for (Type t : list) {
+            t.setFacteurs(t.getFacteurs().stream()
+                    .filter(f -> f.getIsDeleted() == null)
+                    .collect(Collectors.toList()));
+        }
         if (!list.isEmpty()) {
+
             return typeMapper.typeParentResponse(res, list);
         }
+        res.setFacteurs(res.getFacteurs().stream()
+                .filter(f -> f.getIsDeleted() == null)
+                .collect(Collectors.toList()));
         return typeMapper.typeParentResponse(res);
     }
 
@@ -294,6 +325,21 @@ public class TypeServiceimplement implements TypeService {
         Type type = toggle_delete(id, false);
         return this.get_type_detail(type.getId());
     }
+    /**
+     * Vérifie l'existence d'un type avec le nom spécifié, en ignorant la casse, et s'assure que le champ
+     * `isDeleted` est `null`.
+     *
+     * @param search le nom du type à rechercher
+     * @return `true` si un type avec le nom spécifié existe et n'est pas supprimé, sinon `false`
+     */
+    @Override
+    public Boolean search_type(String search, int id) {
+        Type type=typeRepository.findByIdAndIsDeletedIsNull((long)id);
+        if(type==null) {
+            return typeRepository.existsByNameIgnoreCaseAndIsDeletedIsNull(search);
+        }
+        return  typeRepository.existsByNameIgnoreCaseAndIdNotAndIsDeletedNotNull(search,(long)id);
+    }
 
     /**
      * Liste des types supprimés avec pagination, tri et recherche.
@@ -346,8 +392,10 @@ public class TypeServiceimplement implements TypeService {
             type.setIsDeleted(null);
         }
         typeRepository.save(type);
+
         if (type.getFacteurs() != null && !type.getFacteurs().isEmpty()) {
-            for (Facteur facteur : type.getFacteurs()) {
+            List<Facteur> facteursToModify = new ArrayList<>(type.getFacteurs());
+            for (Facteur facteur : facteursToModify) {
                 if (facteur.getIsDeleted() == null && deleted) {
                     facteurService.delete_facteur(facteur.getId());
                 } else if (facteur.getIsDeleted() != null && !deleted) {
@@ -355,9 +403,11 @@ public class TypeServiceimplement implements TypeService {
                 }
             }
         }
+
         List<Type> childTypes = typeRepository.findAllByParent(type);
         if (!childTypes.isEmpty()) {
-            for (Type childType : childTypes) {
+            List<Type> childTypesToModify = new ArrayList<>(childTypes);
+            for (Type childType : childTypesToModify) {
                 toggle_delete(childType.getId(), deleted);
             }
         }
@@ -446,16 +496,25 @@ public class TypeServiceimplement implements TypeService {
      * @param page   Numéro de la page à récupérer (commence à 0).
      * @param size   Nombre d'éléments par page.
      * @param search Critère de recherche dans le nom des types.
-     * @param order  Ordre de tri des résultats.
+     * @param sortBy  Ordre de tri des résultats.
      * @return Page<Type> Page des types triés.
      */
-    private Page<Type> pagesorted(int page, int size, String search, String[] order) {
-        Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
-        Pageable pe = PageRequest.of(page, size, sort);
-        if (!search.isEmpty()) {
-            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pe);
+    private Page<Type> pagesorted(int page, int size, String search, String[] sortBy) {
+        List<Sort.Order> orders = new ArrayList<>();
+        for (int i = 0; i < sortBy.length; i++) {
+            if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
+                continue;
+            } else {
+                Sort.Direction direction = (i + 1 < sortBy.length && sortBy[i + 1].equals("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, sortBy[i]));
+            }
         }
-        return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pe);
+        orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
+        if (!search.isEmpty()) {
+            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pageable);
+        }
+        return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pageable);
     }
 
     /**
@@ -533,13 +592,10 @@ public class TypeServiceimplement implements TypeService {
      * @throws OperationNotPermittedException Si la profondeur du type dépasse deux niveaux.
      */
     private Type updateType(Long typeId, TypeRequest request, Type parent) {
-        // Fetch the type by ID, ensuring it is not deleted
         Type type = typeRepository.findByIdAndIsDeletedIsNull(typeId);
         if (type == null) {
             throw new EntityNotFoundException("Type not found with id: " + typeId);
         }
-
-        // Update type fields if provided
         if (request.nom_type() != null && !request.nom_type().equals(type.getName())) {
             type.setName(request.nom_type());
         }
@@ -563,8 +619,7 @@ public class TypeServiceimplement implements TypeService {
                     ? facteurRepository.findAllByTypeAndIsDeletedIsNull(type)
                     : facteurRepository.findAllByTypeAndIdNotInAndIsDeletedNull(type, newFacteurIds);
             for (Facteur facteur : oldFacteurs) {
-                facteur.setIsDeleted(LocalDateTime.now());
-                facteurRepository.save(facteur);
+                facteurService.delete_facteur(facteur.getId());
             }
             for (FacteurRequest i : request.facteurs()) {
                 if (i.id() != null) {
@@ -576,8 +631,7 @@ public class TypeServiceimplement implements TypeService {
         } else {
             List<Facteur> oldFacteurs = facteurRepository.findAllByTypeAndIsDeletedIsNull(type);
             for (Facteur facteur : oldFacteurs) {
-                facteur.setIsDeleted(LocalDateTime.now());
-                facteurRepository.save(facteur);
+                facteurService.delete_facteur(facteur.getId());
             }
         }
         if (request.types() != null) {
@@ -607,7 +661,6 @@ public class TypeServiceimplement implements TypeService {
         return type;
     }
 
-
     /**
      * Désactive les enfants et facteurs d'un type si nécessaire.
      *
@@ -622,7 +675,6 @@ public class TypeServiceimplement implements TypeService {
                 }
             }
         }
-
         List<Type> childTypes = typeRepository.findAllByParent(type);
         if (childTypes != null) {
             for (Type childType : childTypes) {
