@@ -16,7 +16,7 @@ import java.util.List;
  * Contrôleur REST pour gérer les opérations liées aux facteurs.
  * <p>
  * Cette classe expose les endpoints nécessaires pour effectuer des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer)
- * sur les objets de type {@link Facteur}. Elle fournit également des fonctionnalités pour activer, désactiver et récupérer les facteurs.
+ * sur les objets de type {@link-Facteur}. Elle fournit également des fonctionnalités pour activer, désactiver et récupérer les facteurs.
  * </p>
  *
  * @author Oussama
@@ -174,7 +174,7 @@ public class FacteurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "") String[] sortBy) {
         return ResponseEntity.ok(facteurService.get_All_deleted_Facteurs(page, size, search, sortBy));
     }
     /**
