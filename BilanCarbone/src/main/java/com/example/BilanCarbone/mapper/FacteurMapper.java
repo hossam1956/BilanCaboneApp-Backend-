@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
  * @author Oussama
  */
 @Service
-public class FacteurMapper {
+public class  FacteurMapper {
     private final     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
 
     /**
