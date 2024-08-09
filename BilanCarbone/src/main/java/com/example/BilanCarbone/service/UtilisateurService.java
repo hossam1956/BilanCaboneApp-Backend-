@@ -126,24 +126,15 @@ public class UtilisateurService {
                 .last(isLast)
                 .build();
     }
-    public CustomUserRepresentation getUtilisateurById(String ID,String token){
 
-        String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
-        try{
-            ResponseEntity<UserRepresentation> response = restTemplate.exchange(URL,HttpMethod.GET,httpEntity,UserRepresentation.class);
-            UserRepresentation user=response.getBody();
-            return new CustomUserRepresentation(user,fetchEntrepriseOfUtilisateur(user));
-
-        }
-        catch (Exception e){throw new RuntimeException("getUtilisateurById : User not found",e);}
-
-    }
-    // ----------------------
-
-
+    /**
+     * Récupère l'identifiant d'un utilisateur à partir de son nom d'utilisateur.
+     *
+     * @param userName le nom d'utilisateur
+     * @param token le jeton d'authentification Bearer
+     * @return l'identifiant de l'utilisateur
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé
+     */
     public String getUserId(String userName, String token) {
         String url = keycloakURL + "/admin/realms/" + realm + "/users?username=" + userName;
         HttpHeaders headers = new HttpHeaders();
@@ -157,7 +148,14 @@ public class UtilisateurService {
 
         throw new RuntimeException("Utilisateur non trouvé");
     }
-
+    /**
+     * Récupère l'identifiant d'un rôle à partir de son nom.
+     *
+     * @param roleName le nom du rôle
+     * @param token le jeton d'authentification Bearer
+     * @return l'identifiant du rôle
+     * @throws RuntimeException si le rôle n'est pas trouvé
+     */
     public String getRoleId(String roleName, String token) {
         if(roleName.equals("ADMIN")){throw new RuntimeException("Rôle non trouvé");}
         String url = keycloakURL + "/admin/realms/" + realm + "/roles/" + roleName;
@@ -173,7 +171,15 @@ public class UtilisateurService {
         throw new RuntimeException("Rôle non trouvé");
     }
 
-
+    /**
+     * Assigne un rôle à un utilisateur.
+     *
+     * @param userId l'identifiant de l'utilisateur
+     * @param roleId l'identifiant du rôle
+     * @param roleName le nom du rôle
+     * @param token le jeton d'authentification Bearer
+     * @throws RuntimeException en cas d'échec de l'attribution du rôle
+     */
     public void assignRoleToUser(String userId, String roleId, String roleName, String token) {
         String url = keycloakURL + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
         HttpHeaders headers = new HttpHeaders();
@@ -193,7 +199,14 @@ public class UtilisateurService {
         }
     }
 
-
+    /**
+     * Crée un nouvel utilisateur dans Keycloak et l'associe à une entreprise.
+     *
+     * @param utilisateurCreationRequest les informations de création de l'utilisateur
+     * @param token le jeton d'authentification Bearer
+     * @return la représentation de l'utilisateur créé
+     * @throws RuntimeException en cas d'échec de la création ou de l'attribution des rôles
+     */
     public CustomUserRepresentation createUtilisateur(UtilisateurCreationRequest utilisateurCreationRequest,String token) {
         String URL = keycloakURL + "/admin/realms/" + realm + "/users";
         HttpHeaders headers = new HttpHeaders();
@@ -212,7 +225,12 @@ public class UtilisateurService {
 
         if(response.getStatusCode().is2xxSuccessful()){
             String IdUtilisateur=getUserId(utilisateurCreationRequest.username(),token);
-            UserRepresentation userRepresentationResponse=getUtilisateurById(IdUtilisateur,token).getUserRepresentation();
+            String URL_GET_USER = keycloakURL + "/admin/realms/" + realm + "/users/" + IdUtilisateur;
+            HttpHeaders headers_GET_USER = new HttpHeaders();
+            headers_GET_USER.setBearerAuth(token);
+            HttpEntity<String> httpEntity1 = new HttpEntity<>(headers_GET_USER);
+            ResponseEntity<UserRepresentation> response_GET_USER = restTemplate.exchange(URL_GET_USER, HttpMethod.GET, httpEntity1, UserRepresentation.class);
+            UserRepresentation userRepresentationResponse=response_GET_USER.getBody();
             Entreprise entreprise=entrepriseRepository.findById(utilisateurCreationRequest.entreprise_id()).isPresent()?entrepriseRepository.findById(utilisateurCreationRequest.entreprise_id()).get():null;
             try{
                 Utilisateur utilisateur=Utilisateur.builder()
@@ -243,8 +261,15 @@ public class UtilisateurService {
 
     }
 
-
-    // ----------------------
+    /**
+     * Met à jour les informations d'un utilisateur existant dans Keycloak.
+     *
+     * @param ID l'identifiant de l'utilisateur à mettre à jour
+     * @param token le jeton d'authentification Bearer
+     * @param new_Utilisateur les nouvelles informations de l'utilisateur
+     * @return la représentation de l'utilisateur mis à jour
+     * @throws RuntimeException en cas d'échec de la mise à jour
+     */
     public CustomUserRepresentation updateUtilisateur(String ID, String token, UtilisateurModificationRequest new_Utilisateur) {
         String URL = keycloakURL + "/admin/realms/" + realm + "/users/" + ID;
         HttpHeaders headers = new HttpHeaders();
@@ -338,104 +363,3 @@ public class UtilisateurService {
         return response.getStatusCode().is2xxSuccessful();
     }
 }
-/*
-
-public String getUserId(String userName, String token) {
-    String url = keycloakURL + "/admin/realms/" + realm + "/users?username=" + userName;
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(token);
-    HttpEntity<String> entity = new HttpEntity<>(headers);
-    ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<>() {});
-
-    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-        return (String) response.getBody().get(0).get("id");
-    }
-
-    throw new RuntimeException("Utilisateur non trouvé");
-}
-
-public String getRoleId(String roleName, String token) {
-    if(roleName.equals("ADMIN")){throw new RuntimeException("Rôle non trouvé");}
-    String url = keycloakURL + "/admin/realms/" + realm + "/roles/" + roleName;
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(token);
-    HttpEntity<String> entity = new HttpEntity<>(headers);
-    ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-
-    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-        return (String) response.getBody().get("id");
-    }
-
-    throw new RuntimeException("Rôle non trouvé");
-}
-
-
-public void assignRoleToUser(String userId, String roleId, String roleName, String token) {
-    String url = keycloakURL + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(token);
-    if (!roleName.equals("ADMIN")) {
-        Map<String, Object> roleRepresentation = new HashMap<>();
-        roleRepresentation.put("id", roleId);
-        roleRepresentation.put("name", roleName);
-        HttpEntity<List<Map<String, Object>>> entity = new HttpEntity<>(List.of(roleRepresentation), headers);
-        ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Échec de l'attribution du rôle à l'utilisateur");
-        }
-    } else {
-        throw new RuntimeException("Rôle non trouvé");
-    }
-}
-
-
-public CustomUserRepresentation createUtilisateur(UtilisateurCreationRequest utilisateurCreationRequest,String token) {
-    String URL = keycloakURL + "/admin/realms/" + realm + "/users";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(token);
-    Map<String, Object> userRepresentation = new HashMap<>();
-    userRepresentation.put("username", utilisateurCreationRequest.username());
-    userRepresentation.put("enabled", true);
-    userRepresentation.put("firstName", utilisateurCreationRequest.firstName());
-    userRepresentation.put("lastName",utilisateurCreationRequest.lastName());
-    userRepresentation.put("email", utilisateurCreationRequest.email());
-    userRepresentation.put("credentials", List.of(
-            Map.of("type", "password", "value", utilisateurCreationRequest.password(), "temporary", false)
-    ));
-    HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(userRepresentation, headers);
-    ResponseEntity<UserRepresentation> response = restTemplate.exchange(URL, HttpMethod.POST, httpEntity, UserRepresentation.class);
-    if(response.getStatusCode().is2xxSuccessful()){
-        String IdUtilisateur=getUserId(utilisateurCreationRequest.username(),token);
-        UserRepresentation userRepresentationResponse=getUtilisateurById(IdUtilisateur,token).getUserRepresentation();
-        Entreprise entreprise=entrepriseRepository.findById(utilisateurCreationRequest.entreprise_id()).isPresent()?entrepriseRepository.findById(utilisateurCreationRequest.entreprise_id()).get():null;
-        try{
-            Utilisateur utilisateur=Utilisateur.builder()
-                    .id(IdUtilisateur)
-                    .entreprise(entreprise)
-                    .build();
-
-            utilisateurRepository.save(utilisateur);
-        }
-        catch (RuntimeException e) {
-            throw new RuntimeException("Utilisateur is unsaved : "+e);
-        }
-
-        try {
-            String idRole = getRoleId(utilisateurCreationRequest.role(), token);
-            assignRoleToUser(IdUtilisateur,idRole,utilisateurCreationRequest.role(),token);
-            return  CustomUserRepresentation.builder()
-                    .userRepresentation(userRepresentationResponse)
-                    .entreprise(entreprise)
-                    .build();
-        }
-        catch (RuntimeException e){
-            throw new RuntimeException("Role not assign to utilisateur"+e);
-        }
-    }
-
-
-    return null ;
-
-}
-* */
