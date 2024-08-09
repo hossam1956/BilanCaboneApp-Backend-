@@ -126,6 +126,29 @@ public class UtilisateurService {
                 .last(isLast)
                 .build();
     }
+    /**
+     * Récupère un utilisateur spécifique à partir de son identifiant dans Keycloak.
+     *
+     * @param ID l'identifiant de l'utilisateur à récupérer
+     * @param token le jeton d'authentification Bearer
+     * @return une instance de CustomUserRepresentation contenant les informations de l'utilisateur et de son entreprise associée
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé ou si une erreur survient lors de la récupération
+     */
+    public CustomUserRepresentation getUtilisateurById(String ID,String token){
+
+        String URL = keycloakURL + "/admin/realms/" + realm + "/users/"+ID;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+        try{
+            ResponseEntity<UserRepresentation> response = restTemplate.exchange(URL,HttpMethod.GET,httpEntity,UserRepresentation.class);
+            UserRepresentation user=response.getBody();
+            return new CustomUserRepresentation(user,fetchEntrepriseOfUtilisateur(user));
+
+        }
+        catch (Exception e){throw new RuntimeException("getUtilisateurById : User not found",e);}
+
+    }
 
     /**
      * Récupère l'identifiant d'un utilisateur à partir de son nom d'utilisateur.
@@ -276,45 +299,45 @@ public class UtilisateurService {
         headers.setBearerAuth(token);
         HttpEntity<String> httpEntity1 = new HttpEntity<>(headers);
         ResponseEntity<UserRepresentation> response1 = restTemplate.exchange(URL, HttpMethod.GET, httpEntity1, UserRepresentation.class);
-       if (response1.getStatusCode().is2xxSuccessful()) {
-                UserRepresentation ex_userRepresentation = response1.getBody();
-                if(ex_userRepresentation != null){
-                    ex_userRepresentation.setEmail(new_Utilisateur.email());
-                    ex_userRepresentation.setFirstName(new_Utilisateur.firstName());
-                    ex_userRepresentation.setLastName(new_Utilisateur.lastName());
-                    HttpEntity<UserRepresentation> httpEntity2 = new HttpEntity<>(ex_userRepresentation, headers);
-                    ResponseEntity<UserRepresentation> response2 = restTemplate.exchange(URL, HttpMethod.PUT, httpEntity2, UserRepresentation.class);
-                    if(response2.getStatusCode().is2xxSuccessful()){
-                        ResponseEntity<UserRepresentation> response3 = restTemplate.exchange(URL, HttpMethod.GET, httpEntity1, UserRepresentation.class);
-                        UserRepresentation userInfo=response3.getBody();
-                        String idRole=getRoleId(new_Utilisateur.role(),token);
-                        String UtilisateurId=response3.getBody()!=null?response3.getBody().getId():null;
-                        assignRoleToUser(UtilisateurId,idRole,new_Utilisateur.role(),token);
-                        if(userInfo!=null && UtilisateurId!=null){
-                            Utilisateur user=utilisateurRepository.findById(UtilisateurId).get();
-                            user.setId(UtilisateurId);
-                            Entreprise entreprise=entrepriseRepository.findById(new_Utilisateur.entreprise_id()).get();
-                            user.setEntreprise(entreprise);
-                            utilisateurRepository.save(user);
+        if (response1.getStatusCode().is2xxSuccessful()) {
+            UserRepresentation ex_userRepresentation = response1.getBody();
+            if(ex_userRepresentation != null){
+                ex_userRepresentation.setEmail(new_Utilisateur.email());
+                ex_userRepresentation.setFirstName(new_Utilisateur.firstName());
+                ex_userRepresentation.setLastName(new_Utilisateur.lastName());
+                HttpEntity<UserRepresentation> httpEntity2 = new HttpEntity<>(ex_userRepresentation, headers);
+                ResponseEntity<UserRepresentation> response2 = restTemplate.exchange(URL, HttpMethod.PUT, httpEntity2, UserRepresentation.class);
+                if(response2.getStatusCode().is2xxSuccessful()){
+                    ResponseEntity<UserRepresentation> response3 = restTemplate.exchange(URL, HttpMethod.GET, httpEntity1, UserRepresentation.class);
+                    UserRepresentation userInfo=response3.getBody();
+                    String idRole=getRoleId(new_Utilisateur.role(),token);
+                    String UtilisateurId=response3.getBody()!=null?response3.getBody().getId():null;
+                    assignRoleToUser(UtilisateurId,idRole,new_Utilisateur.role(),token);
+                    if(userInfo!=null && UtilisateurId!=null){
+                        Utilisateur user=utilisateurRepository.findById(UtilisateurId).get();
+                        user.setId(UtilisateurId);
+                        Entreprise entreprise=entrepriseRepository.findById(new_Utilisateur.entreprise_id()).get();
+                        user.setEntreprise(entreprise);
+                        utilisateurRepository.save(user);
 
-                            return new CustomUserRepresentation(userInfo, fetchEntrepriseOfUtilisateur(userInfo));
+                        return new CustomUserRepresentation(userInfo, fetchEntrepriseOfUtilisateur(userInfo));
 
-                        }
-                        else{
-                            throw new RuntimeException("userInfo or UtilisateurId is null or both");
-                        }
                     }
-                    else {
-                        throw new RuntimeException("Failed to fetch user for update");
+                    else{
+                        throw new RuntimeException("userInfo or UtilisateurId is null or both");
                     }
                 }
-                else{
-                    throw new RuntimeException("ex_userRepresentation is null");
+                else {
+                    throw new RuntimeException("Failed to fetch user for update");
                 }
-       }
-       else {
-           throw new RuntimeException("Utilisateur not found to update");
-       }
+            }
+            else{
+                throw new RuntimeException("ex_userRepresentation is null");
+            }
+        }
+        else {
+            throw new RuntimeException("Utilisateur not found to update");
+        }
 
     }
 
