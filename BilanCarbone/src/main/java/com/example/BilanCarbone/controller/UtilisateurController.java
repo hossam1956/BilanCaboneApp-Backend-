@@ -2,6 +2,8 @@ package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.common.PageResponse;
 import com.example.BilanCarbone.config.CustomUserRepresentation;
+import com.example.BilanCarbone.dto.UtilisateurCreationRequest;
+import com.example.BilanCarbone.dto.UtilisateurModificationRequest;
 import com.example.BilanCarbone.entity.Utilisateur;
 import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.service.UtilisateurService;
@@ -46,7 +48,29 @@ public class UtilisateurController {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
         return utilisateurService.getAllUtilisateur(page, size, search, token);
     }
-
+    @GetMapping("id")
+    public CustomUserRepresentation getUtilisateurById(
+            @RequestParam(defaultValue = "0")  String ID,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        return utilisateurService.getUtilisateurById(ID,token);
+    }
+    @PostMapping()
+    public CustomUserRepresentation createUtilisateur(
+            @RequestBody UtilisateurCreationRequest utilisateurCreationRequest,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
+    ){
+        String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        return utilisateurService.createUtilisateur(utilisateurCreationRequest,token);
+    }
+    @PutMapping()
+    public CustomUserRepresentation updateUtilisateur(
+            @RequestParam(defaultValue = "0")String ID,
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestBody UtilisateurModificationRequest new_Utilisateur){
+        String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        return utilisateurService.updateUtilisateur(ID,token,new_Utilisateur);
+    }
     /**
      * Bloque un utilisateur en fonction de son identifiant.
      *
@@ -56,7 +80,7 @@ public class UtilisateurController {
      */
     @PutMapping("block")
     public boolean blockUtilisateur(
-            @RequestParam(defaultValue = "") String ID,
+            @RequestParam(defaultValue = "b56381a7-6ee7-4e77-8f5f-ade39d4da0b2") String ID,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
@@ -84,5 +108,14 @@ public class UtilisateurController {
         } else {
             throw new RuntimeException("L'utilisateur n'est pas trouvé dans la table utilisateur");
         }
+    }
+
+    @GetMapping("user")
+    public List<Utilisateur> getUtilisateur(){
+        return utilisateurRepository.findAll();
+    }
+    @DeleteMapping("user")
+    public void SupprimerAllUtilisateur(){
+         utilisateurRepository.deleteAll();
     }
 }
