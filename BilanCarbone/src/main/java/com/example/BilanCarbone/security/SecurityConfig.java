@@ -42,8 +42,10 @@ public class SecurityConfig {
                         authorizeRequests
                                // .requestMatchers("/api/utilisateur/**").hasRole("ADMIN")
                                // .requestMatchers("/api/demande/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT,"api/utilisateur").permitAll()
+                                .requestMatchers("api/utilisateur").permitAll()
                                 .requestMatchers("/api/entreprise").permitAll()
-                                .requestMatchers(HttpMethod.POST,"/api/entreprise").permitAll()
+                                .requestMatchers(HttpMethod.POST,"/api/demande").permitAll()
                                 .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

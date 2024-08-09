@@ -22,6 +22,7 @@ public class EntrepriseController {
 
     }
 
+
     @PostMapping
     public Entreprise saveEntreprise(Entreprise entreprise){
         return entrepriseRepository.save(entreprise);

@@ -132,6 +132,7 @@ public class DemandeUtilisateurService {
      * @throws RuntimeException si le rôle n'est pas trouvé.
      */
     public String getRoleId(String roleName, String token) {
+        if(roleName.equals("ADMIN")){throw new RuntimeException("Rôle non trouvé");}
         String url = keycloakURL + "/admin/realms/" + realm + "/roles/" + roleName;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
