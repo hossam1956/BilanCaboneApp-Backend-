@@ -24,8 +24,7 @@ public interface FacteurRepository extends JpaRepository<Facteur, Long> {
     Facteur findByIdAndIsDeletedNotNull(Long id);
     List<Facteur> findAllByTypeAndIdNotInAndIsDeletedNull(Type type,List<Long> ids);
     List<Facteur> findAllByTypeAndIsDeletedIsNull(Type type);
-
-
-
+    Boolean existsByNomIgnoreCaseAndIsDeletedIsNull(String nom);
+    Boolean existsAllByNomIgnoreCaseAndIdNotAndIsDeletedNotNull(String nom,Long id);
 
 }

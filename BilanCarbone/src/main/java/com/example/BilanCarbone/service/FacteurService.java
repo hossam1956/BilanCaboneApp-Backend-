@@ -19,6 +19,7 @@ public interface FacteurService {
     FacteurResponse delete_facteur(Long facteurId);
     FacteurResponse delete_force_facteur(Long facteurId);
     FacteurResponse recovery_facteur(Long facteurId);
+    Boolean search_facteur(String search , int id);
     PageResponse<FacteurResponse> get_All_deleted_Facteurs(int page, int size,String search,String... order);
 
 

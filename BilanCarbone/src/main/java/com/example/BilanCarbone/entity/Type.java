@@ -44,7 +44,7 @@ public class Type extends BaseEntity {
      * Les facteurs sont liés à ce type et sont automatiquement supprimés si ce type est supprimé (cascade de suppression).
      * </p>
      */
-    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL)
     private List<Facteur> facteurs;
 
     public Type(String name, Type parent, Boolean active, List<Facteur> facteurs) {

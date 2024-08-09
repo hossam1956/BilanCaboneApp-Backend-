@@ -45,8 +45,8 @@ public class FacteurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
-        return ResponseEntity.ok(facteurService.getAllFacteurs(page, size, search));
+            @RequestParam(defaultValue = "")    String[] sortBy) {
+        return ResponseEntity.ok(facteurService.getAllFacteurs(page, size, search, sortBy));
     }
 
     /**
@@ -174,7 +174,22 @@ public class FacteurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "") String[] sortBy) {
         return ResponseEntity.ok(facteurService.get_All_deleted_Facteurs(page, size, search, sortBy));
+    }
+    /**
+     * Vérifie l'existence d'un facteur avec le nom spécifié, en ignorant la casse, et s'assure que le champ
+     * `isDeleted` est `null`.
+     *
+     * @param search le nom du facteur à rechercher
+     * @return `true` si un type facteur le nom spécifié existe et n'est pas supprimé, sinon `false`
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Boolean> search(
+            @RequestParam(defaultValue = "") String search,
+    @RequestParam(defaultValue = "0" ) int id) {
+        Boolean res=facteurService.search_facteur(search,id);
+
+        return ResponseEntity.ok(res);
     }
 }
