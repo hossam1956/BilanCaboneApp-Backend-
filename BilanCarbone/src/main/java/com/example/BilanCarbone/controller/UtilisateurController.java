@@ -80,7 +80,7 @@ public class UtilisateurController {
      */
     @PutMapping("block")
     public boolean blockUtilisateur(
-            @RequestParam(defaultValue = "b56381a7-6ee7-4e77-8f5f-ade39d4da0b2") String ID,
+            @RequestParam(defaultValue = "") String ID,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
