@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +71,9 @@ public class UtilisateurService {
         if (utilisateurRepository.findById(ID).isPresent()) {
             return utilisateurRepository.findById(ID).get().getEntreprise();
         } else {
-            throw new RuntimeException("L'utilisateur n'est pas trouvé pour l'ajouter dans le CustomUserRepresentation");
+            throw new RuntimeException("L'utilisateur n'est pas trouvé ");
         }
     }
-
     /**
      * Récupère une liste paginée d'utilisateurs depuis Keycloak.
      *
@@ -84,7 +84,8 @@ public class UtilisateurService {
      * @return un objet PageResponse contenant la liste paginée des objets CustomUserRepresentation
      */
     @Transactional
-    public PageResponse<CustomUserRepresentation> getAllUtilisateur(int currentpage, int size, String search, String token) {
+    public PageResponse<CustomUserRepresentation> getAllUtilisateur(int currentpage, int size, String search, String token,Object roles,Object idUser) {
+
         Pageable pageable = PageRequest.of(currentpage, size);
         String URL = keycloakURL + "/admin/realms/" + realm + "/users";
         HttpHeaders headers = new HttpHeaders();
@@ -94,10 +95,37 @@ public class UtilisateurService {
         ResponseEntity<List<UserRepresentation>> response = restTemplate.exchange(
                 URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {});
 
-        List<UserRepresentation> utilisateurs = response.getBody();
-        utilisateurs = utilisateurs.stream()
-                .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
-                .collect(Collectors.toList());
+        List<UserRepresentation> utilisateurs = response.getBody();;
+        if(roles.toString().contains("ADMIN")){
+            utilisateurs = response.getBody();
+            utilisateurs = utilisateurs.stream()
+                    .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
+                    .collect(Collectors.toList());
+        }
+        else if(roles.toString().contains("MANAGER")){
+
+            String URL_GET_CONNECTED_USER = keycloakURL + "/admin/realms/" + realm + "/users/"+String.valueOf(idUser);
+            ResponseEntity<UserRepresentation> response_GET_CONNECTED_USER = restTemplate.exchange(URL_GET_CONNECTED_USER,HttpMethod.GET,httpEntity,UserRepresentation.class);
+            if (response_GET_CONNECTED_USER.getStatusCode().is2xxSuccessful()) {
+                UserRepresentation user = response_GET_CONNECTED_USER.getBody();
+                Entreprise entreprise=fetchEntrepriseOfUtilisateur(user);
+
+                List<Utilisateur> Users=utilisateurRepository.findByEntreprise(entreprise);
+                List<String> Ids=new ArrayList<>();
+                for(Utilisateur utilisateur:Users){
+                    Ids.add(utilisateur.getId());
+                }
+                utilisateurs = utilisateurs.stream()
+                        .filter(utilisateur ->Ids.contains(utilisateur.getId()))
+                        .filter(utilisateur ->!user.getId().equals(utilisateur.getId()))
+                        .collect(Collectors.toList());
+            } else {
+                throw new RuntimeException("getAllUtilisateur:Failed to fetch Connected User ");
+            }
+
+
+        }
+
 
         List<UserRepresentation> filtredUtilisateur = search.isEmpty() ? utilisateurs : utilisateurs.stream()
                 .filter(utilisateur -> utilisateur.getFirstName().contains(search) ||
@@ -142,8 +170,15 @@ public class UtilisateurService {
         HttpEntity<String> httpEntity = new HttpEntity<>(headers);
         try{
             ResponseEntity<UserRepresentation> response = restTemplate.exchange(URL,HttpMethod.GET,httpEntity,UserRepresentation.class);
-            UserRepresentation user=response.getBody();
-            return new CustomUserRepresentation(user,fetchEntrepriseOfUtilisateur(user));
+            if (response.getStatusCode().is2xxSuccessful()) {
+                UserRepresentation user = response.getBody();
+                return new CustomUserRepresentation(user, fetchEntrepriseOfUtilisateur(user));
+            } else {
+                System.out.println("Response Status: " + response.getStatusCode());
+                System.out.println("Response Body: " + response.getBody());
+                throw new RuntimeException("getUtilisateurById: Failed with status " + response.getStatusCode());
+            }
+
 
         }
         catch (Exception e){throw new RuntimeException("getUtilisateurById : User not found",e);}

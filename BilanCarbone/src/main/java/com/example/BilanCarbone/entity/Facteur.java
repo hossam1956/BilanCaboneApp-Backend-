@@ -58,7 +58,7 @@ public class Facteur extends BaseEntity {
 	public Facteur(String nom, Unite unit, BigDecimal emissionFactor, Type type, Boolean active) {
 		this.nom = nom;
 		this.unit = unit;
-			this.emissionFactor = emissionFactor;
+		this.emissionFactor = emissionFactor;
 		this.type = type;
 		this.active = active;
 	}

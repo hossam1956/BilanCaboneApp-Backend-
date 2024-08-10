@@ -10,6 +10,7 @@ import com.example.BilanCarbone.jpa.EntrepriseRepository;
 import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +83,21 @@ public class DemandeUtilisateurService {
                 .rawPassword(demandeUtilisateurDTO.getPassword())
                 .build();
     }
-
+    /**
+     * Récupère l'entreprise associée à un utilisateur.
+     *
+     * @param user l'utilisateur dont on souhaite récupérer l'entreprise
+     * @return l'entreprise associée à l'utilisateur
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé dans la base de données
+     */
+    public Entreprise fetchEntrepriseOfUtilisateur(UserRepresentation user) {
+        String ID = user.getId();
+        if (utilisateurRepository.findById(ID).isPresent()) {
+            return utilisateurRepository.findById(ID).get().getEntreprise();
+        } else {
+            throw new RuntimeException("L'utilisateur n'est pas trouvé ");
+        }
+    }
     /**
      * Récupère toutes les demandes d'utilisateur avec pagination et recherche.
      *
@@ -92,22 +107,54 @@ public class DemandeUtilisateurService {
      * @return une réponse paginée contenant les demandes d'utilisateur.
      */
     @Transactional
-    public PageResponse<DemandeUtilisateur> getAllDemandeUtilisateur(int current_page, int size, String search) {
+    public PageResponse<DemandeUtilisateur> getAllDemandeUtilisateur(int current_page, int size, String search,String token,Object roles,Object idUser) {
         Pageable page = PageRequest.of(current_page, size);
-        Page<DemandeUtilisateur> pages = search.isEmpty() ?
-                demandeUtilisateurRepository.findAll(page) :
-                demandeUtilisateurRepository.findAllByNomContainingIgnoreCase(search.toLowerCase().trim(), page);
+        if(roles.toString().contains("ADMIN")){
+            Page<DemandeUtilisateur> pages = search.isEmpty() ?
+                    demandeUtilisateurRepository.findAll(page) :
+                    demandeUtilisateurRepository.findAllByNomContainingIgnoreCase(search.toLowerCase().trim(), page);
+                    List<DemandeUtilisateur> res = pages.stream().toList();
+                    return PageResponse.<DemandeUtilisateur>builder()
+                            .content(res)
+                            .number(pages.getNumber())
+                            .size(pages.getSize())
+                            .totalElements(pages.getTotalElements())
+                            .totalPages(pages.getTotalPages())
+                            .first(pages.isFirst())
+                            .last(pages.isLast())
+                            .build();
+        }
+        else if(roles.toString().contains("MANAGER")){
+            String URL_GET_CONNECTED_USER = keycloakURL + "/admin/realms/" + realm + "/users/"+String.valueOf(idUser);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+            ResponseEntity<UserRepresentation> response_GET_CONNECTED_USER = restTemplate.exchange(URL_GET_CONNECTED_USER,HttpMethod.GET,httpEntity,UserRepresentation.class);
+            if (response_GET_CONNECTED_USER.getStatusCode().is2xxSuccessful()) {
+                UserRepresentation user = response_GET_CONNECTED_USER.getBody();
+                Entreprise entreprise = fetchEntrepriseOfUtilisateur(user);
+                Page<DemandeUtilisateur> pages = search.isEmpty() ?
+                        demandeUtilisateurRepository.findAllByEntreprise(entreprise,page) :
+                        demandeUtilisateurRepository.findAllByNomContainingIgnoreCase(search.toLowerCase().trim(), page);
+                List<DemandeUtilisateur> res = pages.stream().toList();
+                return PageResponse.<DemandeUtilisateur>builder()
+                        .content(res)
+                        .number(pages.getNumber())
+                        .size(pages.getSize())
+                        .totalElements(pages.getTotalElements())
+                        .totalPages(pages.getTotalPages())
+                        .first(pages.isFirst())
+                        .last(pages.isLast())
+                        .build();
+            }
+            else{
+                throw new RuntimeException("getAllDemandeUtilisateur:Failed to fetch Connected User ");
+            }
 
-        List<DemandeUtilisateur> res = pages.stream().toList();
-        return PageResponse.<DemandeUtilisateur>builder()
-                .content(res)
-                .number(pages.getNumber())
-                .size(pages.getSize())
-                .totalElements(pages.getTotalElements())
-                .totalPages(pages.getTotalPages())
-                .first(pages.isFirst())
-                .last(pages.isLast())
-                .build();
+        }
+
+        throw new RuntimeException("getAllDemandeUtilisateur:The connected user is not a MANAGER or ADMIN ");
+
     }
 
     /**
