@@ -135,7 +135,7 @@ public class DemandeUtilisateurService {
                 Entreprise entreprise = fetchEntrepriseOfUtilisateur(user);
                 Page<DemandeUtilisateur> pages = search.isEmpty() ?
                         demandeUtilisateurRepository.findAllByEntreprise(entreprise,page) :
-                        demandeUtilisateurRepository.findAllByNomContainingIgnoreCase(search.toLowerCase().trim(), page);
+                        demandeUtilisateurRepository.findAllByNomContainingIgnoreCaseFilterByEntreprise(search.toLowerCase().trim(),entreprise, page);
                 List<DemandeUtilisateur> res = pages.stream().toList();
                 return PageResponse.<DemandeUtilisateur>builder()
                         .content(res)
