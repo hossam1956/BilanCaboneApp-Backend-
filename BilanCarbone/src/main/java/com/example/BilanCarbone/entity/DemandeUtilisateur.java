@@ -88,11 +88,6 @@ public class DemandeUtilisateur {
     @NotEmpty(message = "Password doit être spécifier")
     private String password;
 
-    /**
-     * Le champs responsable de sauvgarder le mot de passe de utilisateur avant qu'il soit encodé afin de
-     * permettre la création du compte utilisateur sur keycloak server
-     */
-    @JsonIgnore
-    private String rawPassword;
+
 
 }
