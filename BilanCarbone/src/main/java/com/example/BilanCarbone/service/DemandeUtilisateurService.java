@@ -8,6 +8,7 @@ import com.example.BilanCarbone.entity.Utilisateur;
 import com.example.BilanCarbone.jpa.DemandeUtilisateurRepository;
 import com.example.BilanCarbone.jpa.EntrepriseRepository;
 import com.example.BilanCarbone.jpa.UtilisateurRepository;
+import com.example.BilanCarbone.security.PasswordEncryptionService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -24,10 +25,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service pour gérer les demandes d'utilisateurs.
@@ -61,6 +60,8 @@ public class DemandeUtilisateurService {
     @Value("${keycloak.realm}")
     private String realm;
 
+    @Autowired
+    private PasswordEncryptionService passwordEncryptionService;
     /**
      * Convertit un objet DemandeUtilisateurDTO en une entité DemandeUtilisateur.
      *
@@ -70,6 +71,8 @@ public class DemandeUtilisateurService {
     public DemandeUtilisateur toEntity(DemandeUtilisateurDTO demandeUtilisateurDTO) {
         Optional<Entreprise> optionalEntreprise = entrepriseRepository.findById(demandeUtilisateurDTO.getEntreprise_id());
         Entreprise entrepriseFound = optionalEntreprise.orElseThrow(() -> new RuntimeException("Cette entreprise n'existe pas"));
+
+
         return DemandeUtilisateur.builder()
                 .id(demandeUtilisateurDTO.getId())
                 .nomUtilisateur(demandeUtilisateurDTO.getNomUtilisateur())
@@ -79,8 +82,7 @@ public class DemandeUtilisateurService {
                 .sendDate(demandeUtilisateurDTO.getSendDate())
                 .role(demandeUtilisateurDTO.getRole())
                 .entreprise(entrepriseFound)
-                .password(demandeUtilisateurDTO.getPassword())
-                .rawPassword(demandeUtilisateurDTO.getPassword())
+                .password(passwordEncryptionService.encryptPassword(demandeUtilisateurDTO.getPassword()))
                 .build();
     }
     /**
@@ -114,6 +116,7 @@ public class DemandeUtilisateurService {
                     demandeUtilisateurRepository.findAll(page) :
                     demandeUtilisateurRepository.findAllByNomContainingIgnoreCase(search.toLowerCase().trim(), page);
                     List<DemandeUtilisateur> res = pages.stream().toList();
+
                     return PageResponse.<DemandeUtilisateur>builder()
                             .content(res)
                             .number(pages.getNumber())
@@ -166,7 +169,6 @@ public class DemandeUtilisateurService {
     @Transactional
     public DemandeUtilisateur addDemandeUtilisateur(DemandeUtilisateurDTO demandeUtilisateurDTO) {
         DemandeUtilisateur demandeUtilisateur = this.toEntity(demandeUtilisateurDTO);
-        demandeUtilisateur.setPassword(passwordEncoder.encode(demandeUtilisateur.getPassword()));
         return demandeUtilisateurRepository.save(demandeUtilisateur);
     }
 
@@ -237,6 +239,7 @@ public class DemandeUtilisateurService {
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Échec de l'attribution du rôle à l'utilisateur");
+
             }
         } else {
             throw new RuntimeException("Rôle non trouvé");
@@ -252,9 +255,42 @@ public class DemandeUtilisateurService {
      */
     @Transactional
     public boolean AccepterDemandeUtilisateur(Long demandeUtilisateurId, String token) {
+
+
         if (demandeUtilisateurId != null) {
+
             DemandeUtilisateur demandeUtilisateur = demandeUtilisateurRepository.findById(demandeUtilisateurId)
                     .orElseThrow(() -> new EntityNotFoundException("La demande avec id: " + demandeUtilisateurId + " n'est pas trouvée"));
+            //--------------
+            if(demandeUtilisateur.getRole().equals("MANAGER")){
+                List<Utilisateur> utilisateurs=utilisateurRepository.findAll();
+
+                List<Utilisateur> utilisateursByEntreprise=utilisateurs.stream()
+                        .filter(utilisateur -> utilisateur.getEntreprise()==demandeUtilisateur.getEntreprise())
+                        .collect(Collectors.toList());
+                for(Utilisateur utilisateur:utilisateursByEntreprise){
+                    String URL_FETCH_ROLE = keycloakURL + "admin/realms/" + realm + "/users/"+utilisateur.getId()+"/role-mappings/realm";
+                    //System.out.println(URL_FETCH_ROLE);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setBearerAuth(token);
+                    HttpEntity<String> entity = new HttpEntity<>(headers);
+                    ResponseEntity<List<Map<String, Object>>> roleResponse = restTemplate.exchange(URL_FETCH_ROLE, HttpMethod.GET, entity,new ParameterizedTypeReference<>() {});
+                    Map<String, Object> roles=roleResponse.getBody().get(0);
+                    String role=roles.get("name").toString();
+                    if(role.equals("MANAGER")){
+                        throw new RuntimeException("Un manager déja existant");
+                    }
+                    else{
+                        continue;
+                    }
+
+                }
+
+
+
+            }
+
+
             String URL = keycloakURL + "/admin/realms/" + realm + "/users";
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
@@ -271,7 +307,8 @@ public class DemandeUtilisateurService {
             userRepresentation.put("firstName", demandeUtilisateur.getPrenom());
             userRepresentation.put("lastName", demandeUtilisateur.getNom());
             userRepresentation.put("email", demandeUtilisateur.getEmail());
-            String rawPassword = demandeUtilisateur.getRawPassword();
+            String rawPassword = passwordEncryptionService.decryptPassword(demandeUtilisateur.getPassword());//;
+
             if (rawPassword == null) {
                 throw new IllegalArgumentException("Le mot de passe ne peut pas être nul");
             }
@@ -290,7 +327,11 @@ public class DemandeUtilisateurService {
                                     .entreprise(demandeUtilisateur.getEntreprise())
                                     .build()
                     );
-                    assignRoleToUser(idUser, idRole, demandeUtilisateur.getRole(), token);
+                    try {
+                        assignRoleToUser(idUser, idRole, demandeUtilisateur.getRole(), token);
+                    }
+                    catch (RuntimeException e){throw new RuntimeException("AccepterDemandeUtilisateur: Assign Role Failed ------> "+e);}
+
                     demandeUtilisateurRepository.delete(demandeUtilisateur);
                     return true;
                 } else {
@@ -301,6 +342,7 @@ public class DemandeUtilisateurService {
             }
         }
         return false;
+
     }
 
     /**

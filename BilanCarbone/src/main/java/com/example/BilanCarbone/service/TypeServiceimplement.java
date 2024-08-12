@@ -138,15 +138,14 @@ public class TypeServiceimplement implements TypeService {
      * @throws EntityNotFoundException Si le type avec l'ID spécifié n'est pas trouvé.
      */
     @Override
-    public TypeResponse get_type_detail(Long id) {
+    public TypeResponse     get_type_detail(Long id) {
         Type res = findbyid(id);
         List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
 
         // Remove deleted facteurs from child types
         for (Type t : list) {
-            t.setFacteurs(t.getFacteurs().stream()
-                    .filter(f -> f.getIsDeleted() == null)
-                    .collect(Collectors.toList()));
+            List<Facteur> facteurs=facteurRepository.findAllByTypeAndIsDeletedIsNull(t);
+            t.setFacteurs(facteurs);
         }
 
         // Check if there are child types
