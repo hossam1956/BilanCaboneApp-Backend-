@@ -145,8 +145,14 @@ public class TypeServiceimplement implements TypeService {
     @Override
     public TypeResponse get_type(Long id) {
         Type res = findbyid(id);
+        boolean check=check_owner(res);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
+
         return typeMapper.typeParentResponse_with_date_and_parent(res);
     }
+
 
     /**
      * Récupère les détails d'un type avec ses enfants.
@@ -158,6 +164,10 @@ public class TypeServiceimplement implements TypeService {
     @Override
     public TypeResponse get_type_detail(Long id) {
         Type res = findbyid(id);
+        boolean check=check_owner(res);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
         List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
         // Remove deleted facteurs from child types
         for (Type t : list) {
@@ -186,6 +196,10 @@ public class TypeServiceimplement implements TypeService {
      */
     private TypeResponse get_type_detail_deleted(Long id) {
         Type res = find_deleted_byid(id);
+        boolean check=check_owner(res);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
         List<Type> list = typeRepository.findAllByParentAndIsDeletedNotNull(res);
         if (!list.isEmpty()) {
             return typeMapper.typeParentResponse(res, list);
@@ -203,6 +217,10 @@ public class TypeServiceimplement implements TypeService {
     @Override
     public TypeResponse get_type_all(Long id) {
         Type res = findbyid(id);
+        boolean check=check_owner(res);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
         if (res.getParent() != null) {
             res = res.getParent();
         }
@@ -768,4 +786,31 @@ public class TypeServiceimplement implements TypeService {
         }
         typeRepository.delete(type);
     }
+
+    private boolean check_owner(Type res) {
+        Map<String, Object> table = userclaim.getUserInfo();
+
+        if (table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                Entreprise entreprise = utilisateur.getEntreprise();
+
+                if (entreprise == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+
+                return res.getEntreprise() == null || Objects.equals(res.getEntreprise().getId(), entreprise.getId());
+            }else {
+                return true;
+            }
+        }
+
+        return true; // If user is an admin or no roles were found, return true
+    }
+
 }

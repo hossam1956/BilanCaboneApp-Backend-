@@ -122,6 +122,7 @@ public class FacteurServiceimplement implements FacteurService {
      */
     @Override
     public FacteurResponse getFacteurById(Long id) {
+
         return facteurMapper.toFacteurResponse(findbyid(id));
     }
 
