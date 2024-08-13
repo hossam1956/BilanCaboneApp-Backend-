@@ -9,7 +9,7 @@ import java.util.List;
 
 
 public interface FacteurService {
-    PageResponse<FacteurResponse> getAllFacteurs(int page, int size,String search,String... order);
+    PageResponse<FacteurResponse> getAllFacteurs(int page,boolean my, int size,String search,String... order);
     FacteurResponse getFacteurById(Long id);
     FacteurResponse tooglefactecurtoggleActivation(Long id,boolean activate);
     FacteurResponse update(Long id, FacteurRequest request);

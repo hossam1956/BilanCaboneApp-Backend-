@@ -1,26 +1,32 @@
 package com.example.BilanCarbone.service;
 
 import com.example.BilanCarbone.common.PageResponse;
+import com.example.BilanCarbone.config.Userget;
 import com.example.BilanCarbone.dto.FacteurRequest;
 import com.example.BilanCarbone.dto.FacteurResponse;
-import com.example.BilanCarbone.entity.Facteur;
-import com.example.BilanCarbone.entity.Type;
-import com.example.BilanCarbone.entity.Unite;
+import com.example.BilanCarbone.entity.*;
 import com.example.BilanCarbone.exception.OperationNotPermittedException;
 import com.example.BilanCarbone.jpa.FacteurRepository;
 import com.example.BilanCarbone.jpa.TypeRepository;
+import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.mapper.FacteurMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
+import java.security.PrivateKey;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Oussama
@@ -32,18 +38,14 @@ import java.util.List;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class FacteurServiceimplement implements FacteurService {
 
     private final FacteurRepository facteurRepository;
     private final TypeRepository typeRepository;
     private final FacteurMapper facteurMapper;
-
-    public FacteurServiceimplement(FacteurRepository facteurRepository, TypeRepository typeRepository, FacteurMapper facteurMapper) {
-        this.facteurRepository = facteurRepository;
-        this.typeRepository = typeRepository;
-        this.facteurMapper = facteurMapper;
-    }
-
+    private final Userget userclaim;
+    private final UtilisateurRepository userRepository;
     /**
      * Retrieves a paginated list of all active factors with optional search and sorting.
      *
@@ -54,9 +56,8 @@ public class FacteurServiceimplement implements FacteurService {
      * @return A {@link PageResponse} containing the paginated list of {@link FacteurResponse}.
      */
     @Override
-    public PageResponse<FacteurResponse> getAllFacteurs(int page, int size, String search, String... sortBy) {
+    public PageResponse<FacteurResponse> getAllFacteurs(int page,boolean my, int size, String search, String... sortBy) {
         List<Sort.Order> orders = new ArrayList<>();
-
         for (int i = 0; i < sortBy.length; i++) {
             if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
                 continue;
@@ -67,10 +68,32 @@ public class FacteurServiceimplement implements FacteurService {
         }
         orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
         Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
-
-        Page<Facteur> facteurPage = search.isEmpty() ?
-                facteurRepository.findAllByIsDeletedIsNull(pageable) :
-                facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNull(search.toLowerCase().trim(), pageable);
+        Page<Facteur> facteurPage=null;
+        Map<String, Object> table = userclaim.getUserInfo();
+        if (my && table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                Entreprise entreprise = utilisateur.getEntreprise();
+                if (entreprise == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+                facteurPage = search.isEmpty() ?
+                        facteurRepository.findAllByEntrepriseAndIsDeletedIsNull(entreprise, pageable) :
+                        facteurRepository.findAllByNomContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(search.toLowerCase().trim(), entreprise, pageable);
+            }else {
+                facteurPage = search.isEmpty() ?
+                        facteurRepository.findAllByIsDeletedIsNull(pageable) :
+                        facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(search.toLowerCase().trim(), pageable);
+            }
+        } else {
+            facteurPage = search.isEmpty() ?
+                    facteurRepository.findAllByIsDeletedIsNull(pageable) :
+                    facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(search.toLowerCase().trim(), pageable);
+        }
 
         List<FacteurResponse> responseList = facteurPage.stream()
                 .map(facteurMapper::toFacteurResponse)

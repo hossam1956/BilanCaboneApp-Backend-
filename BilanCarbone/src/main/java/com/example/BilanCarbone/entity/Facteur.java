@@ -55,12 +55,17 @@ public class Facteur extends BaseEntity {
 	 */
 	private Boolean active;
 
-	public Facteur(String nom, Unite unit, BigDecimal emissionFactor, Type type, Boolean active) {
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "entreprise_id")
+	private Entreprise entreprise;
+
+	public Facteur(String nom, Unite unit, BigDecimal emissionFactor, Type type, Boolean active, Entreprise entreprise) {
 		this.nom = nom;
 		this.unit = unit;
-			this.emissionFactor = emissionFactor;
+		this.emissionFactor = emissionFactor;
 		this.type = type;
 		this.active = active;
+		this.entreprise = entreprise;
 	}
 
 	public Facteur() {
@@ -73,6 +78,7 @@ public class Facteur extends BaseEntity {
 		this.emissionFactor = b.emissionFactor;
 		this.type = b.type;
 		this.active = b.active;
+		this.entreprise = b.entreprise;
 	}
 
 	public static FacteurBuilder<?, ?> builder() {
@@ -99,6 +105,10 @@ public class Facteur extends BaseEntity {
 		return this.active;
 	}
 
+	public Entreprise getEntreprise() {
+		return this.entreprise;
+	}
+
 	public void setNom(String nom) {
 		this.nom = nom;
 	}
@@ -117,6 +127,10 @@ public class Facteur extends BaseEntity {
 
 	public void setActive(Boolean active) {
 		this.active = active;
+	}
+
+	public void setEntreprise(Entreprise entreprise) {
+		this.entreprise = entreprise;
 	}
 
 	public boolean equals(final Object o) {
@@ -140,6 +154,10 @@ public class Facteur extends BaseEntity {
 		final Object this$active = this.getActive();
 		final Object other$active = other.getActive();
 		if (this$active == null ? other$active != null : !this$active.equals(other$active)) return false;
+		final Object this$entreprise = this.getEntreprise();
+		final Object other$entreprise = other.getEntreprise();
+		if (this$entreprise == null ? other$entreprise != null : !this$entreprise.equals(other$entreprise))
+			return false;
 		return true;
 	}
 
@@ -160,11 +178,13 @@ public class Facteur extends BaseEntity {
 		result = result * PRIME + ($type == null ? 43 : $type.hashCode());
 		final Object $active = this.getActive();
 		result = result * PRIME + ($active == null ? 43 : $active.hashCode());
+		final Object $entreprise = this.getEntreprise();
+		result = result * PRIME + ($entreprise == null ? 43 : $entreprise.hashCode());
 		return result;
 	}
 
 	public String toString() {
-		return "Facteur(nom=" + this.getNom() + ", unit=" + this.getUnit() + ", emissionFactor=" + this.getEmissionFactor() + ", type=" + this.getType() + ", active=" + this.getActive() + ")";
+		return "Facteur(nom=" + this.getNom() + ", unit=" + this.getUnit() + ", emissionFactor=" + this.getEmissionFactor() + ", type=" + this.getType() + ", active=" + this.getActive() + ", entreprise=" + this.getEntreprise() + ")";
 	}
 
 	public static abstract class FacteurBuilder<C extends Facteur, B extends FacteurBuilder<C, B>> extends BaseEntityBuilder<C, B> {
@@ -173,6 +193,7 @@ public class Facteur extends BaseEntity {
 		private BigDecimal emissionFactor;
 		private Type type;
 		private Boolean active;
+		private Entreprise entreprise;
 
 		public B nom(String nom) {
 			this.nom = nom;
@@ -199,12 +220,17 @@ public class Facteur extends BaseEntity {
 			return self();
 		}
 
+		public B entreprise(Entreprise entreprise) {
+			this.entreprise = entreprise;
+			return self();
+		}
+
 		protected abstract B self();
 
 		public abstract C build();
 
 		public String toString() {
-			return "Facteur.FacteurBuilder(super=" + super.toString() + ", nom=" + this.nom + ", unit=" + this.unit + ", emissionFactor=" + this.emissionFactor + ", type=" + this.type + ", active=" + this.active + ")";
+			return "Facteur.FacteurBuilder(super=" + super.toString() + ", nom=" + this.nom + ", unit=" + this.unit + ", emissionFactor=" + this.emissionFactor + ", type=" + this.type + ", active=" + this.active + ", entreprise=" + this.entreprise + ")";
 		}
 	}
 

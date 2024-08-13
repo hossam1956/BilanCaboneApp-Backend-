@@ -1,28 +1,29 @@
 package com.example.BilanCarbone.service;
 
 import com.example.BilanCarbone.common.PageResponse;
+import com.example.BilanCarbone.config.Userget;
 import com.example.BilanCarbone.dto.FacteurRequest;
 import com.example.BilanCarbone.dto.TypeRequest;
 import com.example.BilanCarbone.dto.TypeResponse;
-import com.example.BilanCarbone.entity.Facteur;
-import com.example.BilanCarbone.entity.Type;
-import com.example.BilanCarbone.entity.Unite;
+import com.example.BilanCarbone.entity.*;
 import com.example.BilanCarbone.exception.OperationNotPermittedException;
 import com.example.BilanCarbone.jpa.FacteurRepository;
 import com.example.BilanCarbone.jpa.TypeRepository;
+import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.mapper.TypeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -32,20 +33,15 @@ import java.util.stream.Collectors;
  * @author Oussama
  */
 @Service
+@RequiredArgsConstructor
 public class TypeServiceimplement implements TypeService {
 
     private final TypeRepository typeRepository;
     private final TypeMapper typeMapper;
     private final FacteurRepository facteurRepository;
     private final FacteurService facteurService;
-
-    public TypeServiceimplement(TypeRepository typeRepository, TypeMapper typeMapper, FacteurRepository facteurRepository, FacteurService facteurService) {
-        this.typeRepository = typeRepository;
-        this.typeMapper = typeMapper;
-        this.facteurRepository = facteurRepository;
-        this.facteurService = facteurService;
-    }
-
+    private final Userget userclaim;
+    private final UtilisateurRepository userRepository;
     /**
      * Liste des types parent avec pagination, tri et recherche.
      *
@@ -141,12 +137,10 @@ public class TypeServiceimplement implements TypeService {
     public TypeResponse get_type_detail(Long id) {
         Type res = findbyid(id);
         List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
-
         // Remove deleted facteurs from child types
         for (Type t : list) {
-            t.setFacteurs(t.getFacteurs().stream()
-                    .filter(f -> f.getIsDeleted() == null)
-                    .collect(Collectors.toList()));
+            List<Facteur> facteurs=facteurRepository.findAllByTypeAndIsDeletedIsNull(t);
+            t.setFacteurs(facteurs);
         }
 
         // Check if there are child types
@@ -155,9 +149,8 @@ public class TypeServiceimplement implements TypeService {
         }
 
         // Remove deleted facteurs from the parent type
-        res.setFacteurs(res.getFacteurs().stream()
-                .filter(f -> f.getIsDeleted() == null)
-                .collect(Collectors.toList()));
+        List<Facteur> facteurs=facteurRepository.findAllByTypeAndIsDeletedIsNull(res);
+        res.setFacteurs(facteurs);
 
         return typeMapper.typeParentResponse(res);
     }
@@ -240,7 +233,6 @@ public class TypeServiceimplement implements TypeService {
         Type re = toggleTypeAndChildren(type, activate);
         return this.get_type_all(re.getId());
     }
-
     /**
      * Ajoute un type détaillé en utilisant les informations fournies.
      *
@@ -250,7 +242,29 @@ public class TypeServiceimplement implements TypeService {
     @Override
     @Transactional
     public TypeResponse add_type_detail(TypeRequest request) {
-        Type type = add_type(request, null);
+        Map<String, Object> table = userclaim.getUserInfo();
+        Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+        Entreprise entreprise = null;
+        System.out.println(roles);
+        if (roles.stream().anyMatch(role -> role.getAuthority().equals("EMPLOYE"))) {
+            throw new AccessDeniedException("Accès refusé: Vous n'avez pas les autorisations nécessaires.");
+        }
+
+        if (roles.stream().anyMatch(role -> role.getAuthority().equals("MANAGER")) ||
+                roles.stream().anyMatch(role -> role.getAuthority().equals("RESPONSABLE"))) {
+
+            String subject = table.get("sub").toString();
+            Utilisateur utilisateur = userRepository.findById(subject)
+                    .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+
+            entreprise = utilisateur.getEntreprise();
+            if (entreprise == null) {
+                throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+            }
+        }
+
+        // Ajouter le type avec l'entreprise associée
+        Type type = add_type(request, null, entreprise);
         return this.get_type_detail(type.getId());
     }
 
@@ -423,7 +437,7 @@ public class TypeServiceimplement implements TypeService {
      * @return Type Le type ajouté.
      * @throws OperationNotPermittedException Si un type avec le même nom existe déjà ou si la profondeur dépasse deux niveaux.
      */
-    private Type add_type(TypeRequest request, Type parent) {
+    private Type add_type(TypeRequest request, Type parent,Entreprise entreprise) {
         Type type = typeRepository.findByNameAndIsDeletedIsNull(request.nom_type());
         if (type != null) {
             throw new OperationNotPermittedException("type avec nom " + type.getName() + " deja exists.");
@@ -435,6 +449,7 @@ public class TypeServiceimplement implements TypeService {
         type = Type.builder()
                 .name(request.nom_type())
                 .parent(parent)
+                .entreprise(entreprise)
                 .active(true)
                 .build();
         type = typeRepository.save(type);
@@ -445,6 +460,7 @@ public class TypeServiceimplement implements TypeService {
                         .nom(i.nom_facteur())
                         .unit(Unite.fromString(i.unit()))
                         .emissionFactor(i.emissionFactor())
+                        .entreprise(entreprise)
                         .type(type)
                         .active((i.active() != null) ? i.active() : true)
                         .build();
@@ -453,7 +469,7 @@ public class TypeServiceimplement implements TypeService {
         }
         if (request.types() != null && !request.types().isEmpty()) {
             for (TypeRequest childRequest : request.types()) {
-                add_type(childRequest, type);
+                add_type(childRequest, type,entreprise);
             }
         }
         return type;
@@ -649,7 +665,7 @@ public class TypeServiceimplement implements TypeService {
                 if (childRequest.id() != null) {
                     updateType(childRequest.id(), childRequest, type);
                 } else {
-                    add_type(childRequest, type);
+                    add_type(childRequest, type,null);
                 }
             }
         }
