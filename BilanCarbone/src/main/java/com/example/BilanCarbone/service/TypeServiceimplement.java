@@ -52,8 +52,8 @@ public class TypeServiceimplement implements TypeService {
      * @return PageResponse<TypeResponse> Liste paginée des types parent.
      */
     @Override
-    public PageResponse<TypeResponse> list_parent(int page, int size, String search, String... order) {
-        Page<Type> respage = pagesorted(page, size, search, order);
+    public PageResponse<TypeResponse> list_parent(int page, int size,boolean my, String search, String... order) {
+        Page<Type> respage = pagesorted(page, size, my, search, order);
         return getTypeResponsePageResponse(respage);
     }
 
@@ -67,7 +67,7 @@ public class TypeServiceimplement implements TypeService {
      * @return PageResponse<TypeResponse> Liste paginée de tous les types.
      */
     @Override
-    public PageResponse<TypeResponse> list_all(int page, int size, String search, String... sortBy) {
+    public PageResponse<TypeResponse> list_all(int page, int size,boolean my, String search, String... sortBy) {
         List<Sort.Order> orders = new ArrayList<>();
         for (int i = 0; i < sortBy.length; i++) {
             if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
@@ -80,11 +80,33 @@ public class TypeServiceimplement implements TypeService {
         orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
         Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
         Page<Type> respage = null;
-        if (search != null && !search.isEmpty()) {
-            respage = typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pageable);
-        } else {
-            respage = typeRepository.findAllByIsDeletedIsNull(pageable);
+        Map<String, Object> table = userclaim.getUserInfo();
+        if (my && table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                Entreprise entreprise = utilisateur.getEntreprise();
+                if (entreprise == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+                respage = (search != null && !search.isEmpty())
+                        ? typeRepository.findAllByNameContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(search.trim(),entreprise,pageable)
+                        : typeRepository.findAllByEntrepriseAndIsDeletedIsNull(entreprise,pageable);
+            }else{
+                respage = (search != null && !search.isEmpty())
+                        ? typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pageable)
+                        : typeRepository.findAllByIsDeletedIsNull(pageable);
+            }
+
+        }else{
+            respage = (search != null && !search.isEmpty())
+                    ? typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(search, pageable)
+                    : typeRepository.findAllByIsDeletedIsNull(pageable);
         }
+
         return getTypeResponsePageResponse(respage);
     }
 
@@ -98,8 +120,8 @@ public class TypeServiceimplement implements TypeService {
      * @return PageResponse<TypeResponse> Liste paginée des types avec détails.
      */
     @Override
-    public PageResponse<TypeResponse> list_all_detail(int page, int size, String search, String... order) {
-        Page<Type> respage = pagesorted(page, size, search, order);
+    public PageResponse<TypeResponse> list_all_detail(int page, int size,boolean my, String search, String... order) {
+        Page<Type> respage = pagesorted(page, size,my, search, order);
         List<Type> child = typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
         List<TypeResponse> list = typeMapper.hierarchiqueResponse(respage.stream().toList(), child);
         return PageResponse.<TypeResponse>builder()
@@ -515,7 +537,7 @@ public class TypeServiceimplement implements TypeService {
      * @param sortBy  Ordre de tri des résultats.
      * @return Page<Type> Page des types triés.
      */
-    private Page<Type> pagesorted(int page, int size, String search, String[] sortBy) {
+    private Page<Type> pagesorted(int page, int size,boolean my, String search, String[] sortBy) {
         List<Sort.Order> orders = new ArrayList<>();
         for (int i = 0; i < sortBy.length; i++) {
             if (sortBy[i].equals("asc") || sortBy[i].equals("desc")) {
@@ -527,10 +549,34 @@ public class TypeServiceimplement implements TypeService {
         }
         orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
         Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
-        if (!search.isEmpty()) {
-            return typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pageable);
+        Page<Type> respage = null;
+        Map<String, Object> table = userclaim.getUserInfo();
+        if (my && table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                Entreprise entreprise = utilisateur.getEntreprise();
+                if (entreprise == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+                respage = (search != null && !search.isEmpty())
+                        ? typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndEntrepriseAndIsDeletedIsNull(search.trim(),entreprise,pageable)
+                        : typeRepository.findAllByParentIsNullAndEntrepriseAndIsDeletedIsNull(entreprise,pageable);
+            }else{
+                respage = (search != null && !search.isEmpty())
+                        ? typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pageable)
+                        : typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pageable);
+            }
+
+        }else{
+            respage = (search != null && !search.isEmpty())
+                    ? typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(search, pageable)
+                    : typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pageable);
         }
-        return typeRepository.findAllByParentIsNullAndIsDeletedIsNull(pageable);
+        return respage;
     }
 
     /**

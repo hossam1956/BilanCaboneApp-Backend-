@@ -54,11 +54,11 @@ public class TypeController {
             @RequestParam(defaultValue = "false") Boolean my,
             @RequestParam(defaultValue = "false") Boolean detail) {
         if (parent) {
-            return ResponseEntity.ok(typeService.list_parent(page, size, search, sortBy));
+            return ResponseEntity.ok(typeService.list_parent(page, size,my, search, sortBy));
         } else if (detail) {
-            return ResponseEntity.ok(typeService.list_all_detail(page, size, search, sortBy));
+            return ResponseEntity.ok(typeService.list_all_detail(page, size,my, search, sortBy));
         }
-        return ResponseEntity.ok(typeService.list_all(page, size, search, sortBy));
+        return ResponseEntity.ok(typeService.list_all(page, size,my, search, sortBy));
     }
 
     /**

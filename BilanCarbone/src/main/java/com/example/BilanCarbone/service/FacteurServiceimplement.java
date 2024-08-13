@@ -66,6 +66,7 @@ public class FacteurServiceimplement implements FacteurService {
                 orders.add(new Sort.Order(direction, sortBy[i]));
             }
         }
+
         orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
         Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
         Page<Facteur> facteurPage=null;
