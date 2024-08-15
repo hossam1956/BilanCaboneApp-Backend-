@@ -150,6 +150,10 @@ public class FacteurServiceimplement implements FacteurService {
         }else{
             facteur = findbyid(id);
         }
+        boolean check=check_owner(facteur);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
         if (request.nom_facteur() != null && !request.nom_facteur().isEmpty() && !request.nom_facteur().equals(facteur.getNom())) {
             facteur.setNom(request.nom_facteur());
         }
@@ -355,6 +359,10 @@ public class FacteurServiceimplement implements FacteurService {
     @Override
     public FacteurResponse tooglefactecurtoggleActivation(Long id, boolean activate) {
         Facteur facteur = findbyid(id);
+        boolean check=check_owner(facteur);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
         if (facteur.getActive() == activate) {
             String action = activate ? "activé" : "désactivé";
             throw new OperationNotPermittedException("Le facteur " + id + " a déjà été " + action);
