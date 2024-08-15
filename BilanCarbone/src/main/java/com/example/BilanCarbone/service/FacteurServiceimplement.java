@@ -188,18 +188,44 @@ public class FacteurServiceimplement implements FacteurService {
     public FacteurResponse addFacteur(FacteurRequest request, Type type) {
         Facteur existingFacteur = facteurRepository.findByNomAndIsDeletedIsNull(request.nom_facteur());
         if (existingFacteur != null) {
-            throw new OperationNotPermittedException("Facteur avec nom " + request.nom_facteur() + " deja exists.");
+            throw new OperationNotPermittedException("Facteur avec nom " + request.nom_facteur() + " déjà existe.");
         }
+
+        Map<String, Object> table = userclaim.getUserInfo();
+        Entreprise entr = null;
+        if (table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean hasPermission = roles.stream()
+                    .anyMatch(role -> role.getAuthority().equals("ADMIN")
+                            || role.getAuthority().equals("MANAGER")
+                            || role.getAuthority().equals("RESPONSABLE"));
+            if (!hasPermission) {
+                throw new AccessDeniedException("Accès refusé pour le rôle actuel.");
+            }
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                entr = utilisateur.getEntreprise();
+                if (entr == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+            }
+        }
+
         Facteur facteur = Facteur.builder()
                 .nom(request.nom_facteur())
                 .unit(Unite.fromString(request.unit()))
                 .emissionFactor(request.emissionFactor())
                 .type(type)
                 .active((request.active() != null) ? request.active() : true)
+                .entreprise(entr)
                 .build();
 
         return facteurMapper.toFacteurResponse(facteurRepository.save(facteur));
     }
+
 
     /**
      * Retrieves a list of all available units.
@@ -220,14 +246,32 @@ public class FacteurServiceimplement implements FacteurService {
      */
     @Override
     public List<FacteurResponse> list_facteur(Long idtype) {
+        Entreprise entr = null;
+        Map<String, Object> table = userclaim.getUserInfo();
+
+        if (table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                entr = utilisateur.getEntreprise();
+                if (entr == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+            }
+        }
+
         List<Facteur> list;
         if (idtype > 0) {
-            Type type = typeRepository.findById(idtype).orElseThrow(
-                    () -> new EntityNotFoundException("type not found with id: " + idtype)
-            );
-            list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNull(type);
+            Type type = typeRepository.findByIdAndEntrepriseIsNullOrEntreprise(idtype,entr);
+            if(type==null) {
+                throw new EntityNotFoundException("type not found with id: " + idtype);
+            }
+            list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(type,entr);
         } else {
-            list = facteurRepository.findAllByActiveIsTrueAndIsDeletedIsNull();
+            list = facteurRepository.findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(entr);
         }
         return list.stream().map(facteurMapper::toFacteurResponse).toList();
     }

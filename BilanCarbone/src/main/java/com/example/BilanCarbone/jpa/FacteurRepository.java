@@ -12,11 +12,13 @@ import java.util.List;
 
 @Repository
 public interface FacteurRepository extends JpaRepository<Facteur, Long> {
-    //global
+
+    List<Facteur> findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(Entreprise entreprise);
+    List<Facteur> findAllByActiveIsTrueAndTypeAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(Type type,Entreprise entreprise);
     Page<Facteur> findAllByNomContainingIgnoreCaseAndEntrepriseIsNullAndIsDeletedIsNullAndEntrepriseIsNull(String name, Pageable pageable);
+
+    //global
     Facteur findByNomAndIsDeletedIsNull(String nom);
-    List<Facteur> findAllByActiveIsTrueAndIsDeletedIsNull();
-    List<Facteur> findAllByActiveIsTrueAndTypeAndIsDeletedIsNull(Type type);
     Facteur findByIdAndIsDeletedIsNull(Long id);
     Page<Facteur> findAllByEntrepriseIsNullAndIsDeletedIsNull(Pageable pageable);
     Page<Facteur> findAllByNomContainingIgnoreCaseAndIsDeletedNotNull(String name, Pageable pageable);

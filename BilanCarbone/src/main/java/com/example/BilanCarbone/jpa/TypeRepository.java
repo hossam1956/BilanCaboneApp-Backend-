@@ -12,10 +12,11 @@ import java.util.List;
  * @author Oussama
  **/
 public interface TypeRepository extends JpaRepository<Type, Long> {
+    Type findByIdAndEntrepriseIsNullOrEntreprise(Long id, Entreprise entreprise);
+    //
     Page<Type> findAllByParentIsNullAndIsDeletedIsNull(Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNull(String Name,Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndIsDeletedIsNull(String Name,Pageable pageable);
-
     List<Type> findAllByParentIsNotNullAndIsDeletedIsNull();
     List<Type> findAllByParentAndIsDeletedIsNull(Type parent);
     Type findByNameAndIsDeletedIsNull(String name);
