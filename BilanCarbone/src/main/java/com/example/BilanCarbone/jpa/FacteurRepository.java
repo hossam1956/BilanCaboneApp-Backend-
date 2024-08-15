@@ -15,7 +15,7 @@ public interface FacteurRepository extends JpaRepository<Facteur, Long> {
     //global
     List<Facteur> findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(Entreprise entreprise);
     List<Facteur> findAllByActiveIsTrueAndTypeAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(Type type,Entreprise entreprise);
-    Page<Facteur> findAllByNomContainingIgnoreCaseAndEntrepriseIsNullAndIsDeletedIsNullAndEntrepriseIsNull(String name, Pageable pageable);
+    Page<Facteur> findAllByNomContainingIgnoreCaseAndEntrepriseIsNullAndIsDeletedIsNull(String name, Pageable pageable);
     Page<Facteur> findAllByIsDeletedNotNullAndEntrepriseIsNull(Pageable pageable);
     Page<Facteur> findAllByNomContainingIgnoreCaseAndIsDeletedNotNullAndEntrepriseIsNull(String name, Pageable pageable);
     Facteur findByNomAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(String nom,Entreprise entreprise)    ;

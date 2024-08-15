@@ -52,6 +52,7 @@ public class TypeMapper {
                 .update(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null)
                 .files(new ArrayList<>())
                 .parent(null)
+                .entreprise(type.getEntreprise()!=null?type.getEntreprise().getId():null)
                 .build();
     }
 
@@ -72,6 +73,7 @@ public class TypeMapper {
         typeResponse.setUpdate(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null);
         typeResponse.setCreate(type.getCreatedDate() != null ? type.getCreatedDate().format(formatter) : null);
         typeResponse.setParent(type.getParent() != null ? type.getParent().getId() : null);
+        typeResponse.setEntreprise(type.getEntreprise()!=null?type.getEntreprise().getId():null);
 
         return typeResponse;
     }
@@ -123,6 +125,7 @@ public class TypeMapper {
                 .deleted(type.getIsDeleted() != null ? type.getIsDeleted().format(formatter) : null)
                 .update(type.getUpdateDate() != null ? type.getUpdateDate().format(formatter) : null)
                 .files(responses)
+                .entreprise(type.getEntreprise()!=null?type.getEntreprise().getId():null)
                 .build();
     }
 

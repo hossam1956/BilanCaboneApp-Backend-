@@ -44,6 +44,7 @@ public class  FacteurMapper {
                 .update_at(facteur.getUpdateDate() != null ? facteur.getUpdateDate().format(formatter) : null)
                 .deleted(facteur.getIsDeleted() != null ? facteur.getIsDeleted().format(formatter) : null)
                 .parent_type(facteur.getType()!=null?facteur.getType().getName():"---")
+                .entreprise(facteur.getEntreprise()!=null?facteur.getEntreprise().getId():null)
                 .build();
     }
 }
