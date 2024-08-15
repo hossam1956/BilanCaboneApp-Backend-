@@ -23,10 +23,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.security.PrivateKey;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Oussama
@@ -87,13 +84,13 @@ public class FacteurServiceimplement implements FacteurService {
                         facteurRepository.findAllByNomContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(search.toLowerCase().trim(), entreprise, pageable);
             }else {
                 facteurPage = search.isEmpty() ?
-                        facteurRepository.findAllByIsDeletedIsNull(pageable) :
-                        facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(search.toLowerCase().trim(), pageable);
+                        facteurRepository.findAllByEntrepriseIsNullAndIsDeletedIsNull(pageable) :
+                        facteurRepository.findAllByNomContainingIgnoreCaseAndEntrepriseIsNullAndIsDeletedIsNullAndEntrepriseIsNull(search.toLowerCase().trim(), pageable);
             }
         } else {
             facteurPage = search.isEmpty() ?
-                    facteurRepository.findAllByIsDeletedIsNull(pageable) :
-                    facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(search.toLowerCase().trim(), pageable);
+                    facteurRepository.findAllByEntrepriseIsNullAndIsDeletedIsNull(pageable) :
+                    facteurRepository.findAllByNomContainingIgnoreCaseAndEntrepriseIsNullAndIsDeletedIsNullAndEntrepriseIsNull(search.toLowerCase().trim(), pageable);
         }
 
         List<FacteurResponse> responseList = facteurPage.stream()
@@ -122,8 +119,12 @@ public class FacteurServiceimplement implements FacteurService {
      */
     @Override
     public FacteurResponse getFacteurById(Long id) {
-
-        return facteurMapper.toFacteurResponse(findbyid(id));
+        Facteur facteur =findbyid(id);
+        boolean check=check_owner(facteur);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
+        return facteurMapper.toFacteurResponse(facteur);
     }
 
     /**
@@ -135,8 +136,20 @@ public class FacteurServiceimplement implements FacteurService {
      * @throws EntityNotFoundException If the factor with the specified ID does not exist.
      */
     @Override
-    public FacteurResponse update(Long id, FacteurRequest request) {
-        Facteur facteur = findbyid(id);
+    public FacteurResponse update(Long id, FacteurRequest request,Type type,boolean all) {
+        Facteur facteur = null;
+        if(all){
+            facteur=facteurRepository.findById(id).orElseThrow(
+                    ()->{
+                        throw new EntityNotFoundException("facteur not exist");
+                    }
+            );
+            if(facteur.getIsDeleted()!=null){
+                this.recovery_facteur(id);
+            }
+        }else{
+            facteur = findbyid(id);
+        }
         if (request.nom_facteur() != null && !request.nom_facteur().isEmpty() && !request.nom_facteur().equals(facteur.getNom())) {
             facteur.setNom(request.nom_facteur());
         }
@@ -150,6 +163,9 @@ public class FacteurServiceimplement implements FacteurService {
         }
         if (request.active() != null && !request.active().equals(facteur.getActive())) {
             facteur.setActive(request.active());
+        }
+        if(type!=null&& !type.getId().equals(facteur.getType().getId())){
+            facteur.setType(type);
         }
         Facteur updatedFacteur = facteurRepository.save(facteur);
         return facteurMapper.toFacteurResponse(updatedFacteur);
@@ -382,4 +398,31 @@ public class FacteurServiceimplement implements FacteurService {
         }
         return facteur;
     }
+
+    private boolean check_owner(Facteur res) {
+        Map<String, Object> table = userclaim.getUserInfo();
+
+        if (table.containsKey("roles")) {
+            Collection<GrantedAuthority> roles = (Collection<GrantedAuthority>) table.get("roles");
+            boolean isNotAdmin = roles.stream().noneMatch(role -> role.getAuthority().equals("ADMIN"));
+
+            if (isNotAdmin) {
+                String subject = table.get("sub").toString();
+                Utilisateur utilisateur = userRepository.findById(subject)
+                        .orElseThrow(() -> new AccessDeniedException("Utilisateur non trouvé, accès refusé."));
+                Entreprise entreprise = utilisateur.getEntreprise();
+
+                if (entreprise == null) {
+                    throw new EntityNotFoundException("L'utilisateur n'appartient pas à une entreprise.");
+                }
+
+                return res.getEntreprise() == null || Objects.equals(res.getEntreprise().getId(), entreprise.getId());
+            }else {
+                return true;
+            }
+        }
+
+        return true; // If user is an admin or no roles were found, return true
+    }
+
 }

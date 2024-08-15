@@ -95,7 +95,7 @@ public class FacteurController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<FacteurResponse> update_facteur(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody FacteurRequest facteurRequest) {
-        return ResponseEntity.ok(facteurService.update(id, facteurRequest));
+        return ResponseEntity.ok(facteurService.update(id, facteurRequest,null,false));
     }
 
     /**

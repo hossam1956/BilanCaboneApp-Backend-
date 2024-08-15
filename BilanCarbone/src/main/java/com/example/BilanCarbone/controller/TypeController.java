@@ -192,6 +192,7 @@ public class TypeController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TypeResponse> update_type(@PathVariable Long id, @RequestBody TypeRequest typeRequest) {
+
         return ResponseEntity.ok(typeService.update_type_detail(id, typeRequest));
     }
     /**

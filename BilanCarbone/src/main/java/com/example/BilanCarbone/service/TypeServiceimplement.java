@@ -331,7 +331,14 @@ public class TypeServiceimplement implements TypeService {
     @Override
     @Transactional
     public TypeResponse update_type_detail(Long id, TypeRequest request) {
+
+        Type res = findbyid(id);
+        boolean check=check_owner(res);
+        if (!check) {
+            throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
+        }
         Type type = updateType(id, request, null);
+
         return this.get_type_detail(type.getId());
     }
 
@@ -703,7 +710,8 @@ public class TypeServiceimplement implements TypeService {
             }
             for (FacteurRequest i : request.facteurs()) {
                 if (i.id() != null) {
-                    facteurService.update(i.id(), i);
+                    System.out.println(i.id());
+                    facteurService.update(i.id(), i,type,true);
                 } else {
                     facteurService.addFacteur(i, type);
                 }
