@@ -7,6 +7,7 @@ import com.example.BilanCarbone.service.DemandeUtilisateurService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import com.example.BilanCarbone.security.JwtClaims;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,10 +22,10 @@ public class DemandeUtilisateurController {
 
     @Autowired
     private DemandeUtilisateurService demandeUtilisateurService;
-
+    @Autowired
+    private JwtClaims jwtClaims;
     /**
      * Récupère toutes les demandes d'utilisateur avec pagination et recherche.
-     *
      * @param page le numéro de la page actuelle
      * @param size la taille de la page
      * @param search le terme de recherche pour filtrer les demandes
@@ -38,8 +39,10 @@ public class DemandeUtilisateurController {
             @RequestParam(defaultValue = "") String search,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader
     ) {
-        System.out.println("Authorization Header: " + authorizationHeader);
-        return ResponseEntity.ok(demandeUtilisateurService.getAllDemandeUtilisateur(page, size, search));
+        String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        Object roles=jwtClaims.extractClaims(token).get("realm_access");
+        Object idUser=jwtClaims.extractClaims(token).get("sub");
+        return ResponseEntity.ok(demandeUtilisateurService.getAllDemandeUtilisateur(page, size, search,token,roles,idUser));
     }
 
     /**
