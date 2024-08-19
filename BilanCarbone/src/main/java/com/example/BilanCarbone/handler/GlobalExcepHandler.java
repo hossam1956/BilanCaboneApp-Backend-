@@ -2,6 +2,7 @@ package com.example.BilanCarbone.handler;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,6 +28,29 @@ import static org.springframework.http.HttpStatus.*;
 @RestControllerAdvice
 public class GlobalExcepHandler {
 
+    /**
+     * Gère les exceptions d'accès refusé.
+     * <p>
+     * Cette méthode est appelée lorsque l'utilisateur tente d'accéder à une ressource sans avoir les autorisations nécessaires.
+     * Elle renvoie une réponse HTTP avec le statut 403 Forbidden.
+     * </p>
+     *
+     * @param exp l'exception d'accès refusé
+     * @return une réponse HTTP avec les détails de l'erreur de permission
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ExceptionResponse> handleAccessDeniedException(AccessDeniedException exp) {
+        return ResponseEntity
+                .status(FORBIDDEN)
+                .body(
+                        ExceptionResponse.builder()
+                                .details("Accès refusé: vous n'avez pas les permissions nécessaires pour accéder à cette ressource.")
+                                .message(exp.getMessage())
+                                .code(FORBIDDEN.value())
+                                .date(LocalDateTime.now())
+                                .build()
+                );
+    }
     /**
      * Gère les exceptions de validation des arguments de méthode.
      * <p>

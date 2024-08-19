@@ -33,7 +33,7 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collecti
         // Extraire les rôles de la revendication "realm_access.roles" et les mapper aux autorités de Spring Security
         Collection<GrantedAuthority> realmRoles = ((Collection<String>) jwt.getClaimAsMap("realm_access").get("roles"))
                 .stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .map(role -> new SimpleGrantedAuthority(role))
                 .collect(Collectors.toList());
 
         // Ajouter les rôles personnalisés à la collection d'autorités

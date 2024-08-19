@@ -6,6 +6,7 @@ import com.example.BilanCarbone.dto.FacteurResponse;
 import com.example.BilanCarbone.service.FacteurService;
 import com.example.BilanCarbone.validation.OnCreate;
 import com.example.BilanCarbone.validation.OnUpdate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class FacteurController {
      * @param size   La taille de la page (8 par défaut).
      * @param search Termes de recherche pour filtrer les résultats.
      * @param sortBy Critères de tri des résultats.
+     * @param my Indicateur pour obtenir les facteur personnalisé (false par défaut).
      * @return Une réponse contenant la page de facteurs correspondant aux critères spécifiés.
      */
     @GetMapping()
@@ -45,8 +47,10 @@ public class FacteurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "")    String[] sortBy) {
-        return ResponseEntity.ok(facteurService.getAllFacteurs(page, size, search, sortBy));
+            @RequestParam(defaultValue = "false") Boolean my,
+            @RequestParam(defaultValue = "")    String[] sortBy
+    ) {
+        return ResponseEntity.ok(facteurService.getAllFacteurs(page,my,size, search,sortBy));
     }
 
     /**
@@ -91,7 +95,7 @@ public class FacteurController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<FacteurResponse> update_facteur(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody FacteurRequest facteurRequest) {
-        return ResponseEntity.ok(facteurService.update(id, facteurRequest));
+        return ResponseEntity.ok(facteurService.update(id, facteurRequest,null,false));
     }
 
     /**
