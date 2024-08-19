@@ -125,8 +125,11 @@ public class FacteurServiceimplement implements FacteurService {
     @Override
     public FacteurResponse addFacteur(FacteurRequest request, Type type) {
         Entreprise entr =check_owner_entreprise();
-        Facteur existingFacteur = facteurRepository.findByNomAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(request.nom_facteur(),entr);
-        if (existingFacteur != null) {
+        List<Facteur> existingFacteur = facteurRepository.findExactMatchByNomAndEntreprise(request.nom_facteur(),entr);
+        for (Facteur value : existingFacteur) {
+            System.out.println(value);
+        }
+        if (!existingFacteur.isEmpty()) {
             throw new OperationNotPermittedException("Facteur avec nom " + request.nom_facteur() + " déjà existe.");
         }
         Facteur facteur = Facteur.builder()
@@ -149,18 +152,17 @@ public class FacteurServiceimplement implements FacteurService {
 
     @Override
     public List<FacteurResponse> list_facteur(Long idtype) {
-        Entreprise entr =check_owner_entreprise();
+        Entreprise entr =check_user_permission_and_get_entreprise(false);
         List<Facteur> list;
         if (idtype > 0) {
-            Type type = typeRepository.findByIdAndEntrepriseIsNullOrEntreprise(idtype,entr);
-            if(type==null) {
-                throw new EntityNotFoundException("type not found with id: " + idtype);
-            }
-            list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(type,entr);
+            Type type = typeRepository.findByIdAndIsDeletedIsNullAndEntreprise(idtype, entr)
+                    .orElseThrow(() -> new EntityNotFoundException("type not found with id: " + idtype));
+
+            list = facteurRepository.findAllActiveByTypeAndEntreprise(type,entr);
         } else {
-            list = facteurRepository.findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(entr);
+            list = facteurRepository.findAllActiveAndNotDeletedWithOptionalEntreprise(entr);
         }
-        return list.stream().map(facteurMapper::toFacteurResponse).toList();
+        return list.stream().map(facteurMapper::toFacteurResponse_simple).toList();
     }
 
 
@@ -178,10 +180,17 @@ public class FacteurServiceimplement implements FacteurService {
     @Override
     public FacteurResponse delete_force_facteur(Long facteurId) {
         Facteur facteur = findbyid_deleted(facteurId);
+        System.out.println(facteur.getNom());
         if (facteur.getIsDeleted() == null) {
             throw new OperationNotPermittedException("le facteur " + facteurId + " n'est pas supprimé");
         }
-        facteurRepository.delete(facteur);
+        List<Type> types = typeRepository.findAllByFacteurs(facteur);
+        for (Type type : types) {
+            type.getFacteurs().remove(facteur);
+            typeRepository.save(type);
+        }
+
+        facteurRepository.deleteById(facteur.getId());
         return facteurMapper.toFacteurResponse(facteur);
     }
 
