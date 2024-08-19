@@ -20,9 +20,13 @@ public class FacteurResponse {
     private String nom_facteur;
     private String unit;
     private BigDecimal emissionFactor;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Boolean active;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Long type;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String parent_type;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String creat_at;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String update_at;

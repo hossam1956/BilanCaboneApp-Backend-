@@ -46,7 +46,7 @@ public class Facteur extends BaseEntity {
 	 * La relation est définie avec une clé étrangère nommée {@code type_id}.
 	 * </p>
 	 */
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "type_id")
 	private Type type;
 
@@ -55,7 +55,7 @@ public class Facteur extends BaseEntity {
 	 */
 	private Boolean active;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "entreprise_id")
 	private Entreprise entreprise;
 
@@ -246,4 +246,5 @@ public class Facteur extends BaseEntity {
 			return new Facteur(this);
 		}
 	}
+
 }

@@ -130,7 +130,7 @@ public class TypeServiceimplement implements TypeService {
     }
     @Override
     public List<TypeResponse> list_type() {
-        Entreprise entreprise = this.check_owner_entreprise();
+        Entreprise entreprise = this.check_user_permission_and_get_entreprise(false);
         List<Type> list = typeRepository.findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseOrEntrepriseIsNull(entreprise);
 
         List<Type> child = typeRepository.findAllByParentIsNotNullAndIsDeletedIsNullAndEntrepriseOrEntrepriseIsNull(entreprise);
@@ -144,7 +144,6 @@ public class TypeServiceimplement implements TypeService {
         if (type != null && !Objects.equals(type.getEntreprise().getId(), entreprise.getId())) {
             throw new AccessDeniedException("Accès refusé pour le rôle actuel.");
         }
-        System.out.println(typeRepository.existsByNameIgnoreCaseAndIsDeletedIsNull(search));
         if (type == null) {
             return typeRepository.existsByNameIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(search) ||
                     typeRepository.existsByNameIgnoreCaseAndIsDeletedIsNullAndEntreprise(search, entreprise);
@@ -239,18 +238,28 @@ public class TypeServiceimplement implements TypeService {
 
     private void deleteTypeAndChildren(Type type) {
         if (type.getFacteurs() != null) {
-            for (Facteur facteur : type.getFacteurs()) {
+            // Collect factors to remove
+            List<Facteur> facteursToRemove = new ArrayList<>(type.getFacteurs());
+            for (Facteur facteur : facteursToRemove) {
                 facteurService.delete_force_facteur(facteur.getId());
             }
+            // Clear the original list after removal
+            type.getFacteurs().clear();
         }
+
         List<Type> childTypes = typeRepository.findAllByParentAndIsDeletedNotNull(type);
         if (childTypes != null) {
             for (Type childType : childTypes) {
                 deleteTypeAndChildren(childType);
             }
         }
-        typeRepository.delete(type);
+        typeRepository.deleteById(type.getId());
     }
+
+
+
+
+
 
     private Type updateType(Long typeId, TypeRequest request, Type parent) {
         Type type = findbyid(typeId,true);
@@ -281,7 +290,6 @@ public class TypeServiceimplement implements TypeService {
             }
             for (FacteurRequest i : request.facteurs()) {
                 if (i.id() != null) {
-                    System.out.println(i.id());
                     facteurService.update(i.id(), i,type,true);
                 } else {
                     facteurService.addFacteur(i, type);
@@ -345,24 +353,35 @@ public class TypeServiceimplement implements TypeService {
             type.setActive(activate);
             typeRepository.save(type);
         }
+
         if (type.getFacteurs() != null && !type.getFacteurs().isEmpty()) {
-            for (Facteur i : type.getFacteurs()) {
+            // Using a copy of the list to avoid ConcurrentModificationException
+            List<Facteur> facteurs = new ArrayList<>(type.getFacteurs());
+            for (Facteur i : facteurs) {
                 if (i.getActive() != activate) {
                     i.setActive(activate);
                     facteurRepository.save(i);
                 }
             }
         }
+
         List<Type> childTypes = typeRepository.findAllByParentAndIsDeletedIsNull(type);
         if (childTypes != null && !childTypes.isEmpty()) {
+            // Collecting child types to toggle in a separate list
+            List<Type> childTypesToToggle = new ArrayList<>();
             for (Type childType : childTypes) {
                 if (childType.getActive() != activate) {
-                    toggleTypeAndChildren(childType, activate);
+                    childTypesToToggle.add(childType);
                 }
             }
+            for (Type childType : childTypesToToggle) {
+                toggleTypeAndChildren(childType, activate);
+            }
         }
+
         return type;
     }
+
     private TypeResponse get_type_detail_deleted(Long id) {
         Type res = find_deleted_byid(id);
         List<Type> list = typeRepository.findAllByParentAndIsDeletedNotNull(res);

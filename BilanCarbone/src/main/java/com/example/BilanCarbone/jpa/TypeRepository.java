@@ -1,18 +1,25 @@
 package com.example.BilanCarbone.jpa;
 
 import com.example.BilanCarbone.entity.Entreprise;
+import com.example.BilanCarbone.entity.Facteur;
 import com.example.BilanCarbone.entity.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
+
+
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Oussama
  **/
 public interface TypeRepository extends JpaRepository<Type, Long> {
-    Type findByIdAndEntrepriseIsNullOrEntreprise(Long id, Entreprise entreprise);
+    @Query("SELECT t FROM Type t WHERE t.id = :idtype AND t.isDeleted IS NULL AND t.active = True  AND (t.entreprise = :entreprise OR t.entreprise IS NULL)")
+    Optional<Type> findByIdAndIsDeletedIsNullAndEntreprise(@Param("idtype") Long idtype, @Param("entreprise") Entreprise entreprise);
     Page<Type> findAllByNameContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(String Name,Pageable pageable);
     Page<Type> findAllByIsDeletedIsNullAndEntrepriseIsNull(Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNullAndEntrepriseIsNull(String Name,Pageable pageable);
@@ -37,6 +44,7 @@ public interface TypeRepository extends JpaRepository<Type, Long> {
     List<Type> findAllByParentIsNotNullAndIsDeletedIsNull( );
     Type findByIdAndIsDeletedIsNull(Long id);
     List<Type> findAllByParentAndIsDeletedIsNull(Type parent);
+    List<Type> findAllByFacteurs(Facteur facteur);
     //perso
     Page<Type> findAllByNameContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(String nom, Entreprise entreprise, Pageable pageable);
     Page<Type> findAllByEntrepriseAndIsDeletedIsNull(Entreprise entreprise, Pageable pageable);

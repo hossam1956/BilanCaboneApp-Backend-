@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,4 +29,5 @@ public class Entreprise {
     @Column(nullable = false, unique = true)
     @NotEmpty(message = "Nom Utilisateur doit être spécifier")
     private String nomEntreprise;
+
 }
