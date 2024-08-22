@@ -2,15 +2,7 @@ package com.example.BilanCarbone.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 public class Entreprise {
     /**
@@ -27,4 +19,28 @@ public class Entreprise {
     @Column(nullable = false, unique = true)
     @NotEmpty(message = "Nom Utilisateur doit être spécifier")
     private String nomEntreprise;
+
+    public Entreprise(Long id, @NotEmpty(message = "Nom Utilisateur doit être spécifier") String nomEntreprise) {
+        this.id = id;
+        this.nomEntreprise = nomEntreprise;
+    }
+
+    public Entreprise() {
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public @NotEmpty(message = "Nom Utilisateur doit être spécifier") String getNomEntreprise() {
+        return this.nomEntreprise;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setNomEntreprise(@NotEmpty(message = "Nom Utilisateur doit être spécifier") String nomEntreprise) {
+        this.nomEntreprise = nomEntreprise;
+    }
 }

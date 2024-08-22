@@ -5,14 +5,18 @@ import com.example.BilanCarbone.entity.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Oussama
  **/
 public interface TypeRepository extends JpaRepository<Type, Long> {
-    Type findByIdAndEntrepriseIsNullOrEntreprise(Long id, Entreprise entreprise);
+    @Query("SELECT t FROM Type t WHERE t.id = :idtype AND t.isDeleted IS NULL AND t.active = True  AND (t.entreprise = :entreprise OR t.entreprise IS NULL)")
+    Optional<Type> findByIdAndIsDeletedIsNullAndEntreprise(@Param("idtype") Long idtype, @Param("entreprise") Entreprise entreprise);
     Page<Type> findAllByNameContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(String Name,Pageable pageable);
     Page<Type> findAllByIsDeletedIsNullAndEntrepriseIsNull(Pageable pageable);
     Page<Type> findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNullAndEntrepriseIsNull(String Name,Pageable pageable);

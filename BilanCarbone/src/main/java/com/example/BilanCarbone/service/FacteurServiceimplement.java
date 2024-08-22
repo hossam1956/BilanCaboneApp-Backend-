@@ -152,10 +152,9 @@ public class FacteurServiceimplement implements FacteurService {
         Entreprise entr =check_owner_entreprise();
         List<Facteur> list;
         if (idtype > 0) {
-            Type type = typeRepository.findByIdAndEntrepriseIsNullOrEntreprise(idtype,entr);
-            if(type==null) {
-                throw new EntityNotFoundException("type not found with id: " + idtype);
-            }
+            Type type = typeRepository.findByIdAndIsDeletedIsNullAndEntreprise(idtype, entr)
+                    .orElseThrow(() -> new EntityNotFoundException("type not found with id: " + idtype));
+
             list = facteurRepository.findAllByActiveIsTrueAndTypeAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(type,entr);
         } else {
             list = facteurRepository.findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseIsNullOrEntreprise(entr);
