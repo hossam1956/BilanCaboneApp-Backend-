@@ -1,6 +1,7 @@
 package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.entity.Entreprise;
+
 import com.example.BilanCarbone.service.EntrepriseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -114,5 +115,6 @@ public class EntrepriseController {
             errors.put(fieldName, errorMessage);
         });
         return ResponseEntity.badRequest().body(errors);
+
     }
 }
