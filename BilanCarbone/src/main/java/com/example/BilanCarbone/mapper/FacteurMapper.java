@@ -47,4 +47,12 @@ public class  FacteurMapper {
                 .entreprise(facteur.getEntreprise()!=null?facteur.getEntreprise().getId():null)
                 .build();
     }
+    public FacteurResponse toFacteurResponse_simple(Facteur facteur) {
+        return FacteurResponse.builder()
+                .id(facteur.getId())
+                .nom_facteur(facteur.getNom())
+                .unit(facteur.getUnit().getUnit())
+                .emissionFactor(facteur.getEmissionFactor())
+                .build();
+    }
 }

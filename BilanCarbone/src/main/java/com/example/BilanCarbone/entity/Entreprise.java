@@ -1,46 +1,58 @@
 package com.example.BilanCarbone.entity;
 
+import com.example.BilanCarbone.common.BaseEntity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
+import lombok.Data;
 
 @Entity
-public class Entreprise {
-    /**
-     * Identifiant unique pour la demande utilisateur.
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Data
+public class Entreprise extends BaseEntity {
 
-    /**
-     * Le nom d'utilisateur de la personne faisant la demande.
-     * Ce champ est requis et doit être unique.
-     */
-    @Column(nullable = false, unique = true)
-    @NotEmpty(message = "Nom Utilisateur doit être spécifier")
-    private String nomEntreprise;
+    @NotBlank(message = "Le nom de l'entreprise est obligatoire")
+    private String nom;
 
-    public Entreprise(Long id, @NotEmpty(message = "Nom Utilisateur doit être spécifier") String nomEntreprise) {
-        this.id = id;
-        this.nomEntreprise = nomEntreprise;
+    @NotBlank(message = "L'adresse de l'entreprise est obligatoire")
+    private String adresse;
+
+    private boolean bloque;
+
+    @Enumerated(EnumType.STRING)
+    private EntrepriseType type;
+
+
+    // Getters et setters
+
+    public String getNom() {
+        return nom;
     }
 
-    public Entreprise() {
+    public void setNom(String nom) {
+        this.nom = nom;
     }
 
-    public Long getId() {
-        return this.id;
+    public String getAdresse() {
+        return adresse;
     }
 
-    public @NotEmpty(message = "Nom Utilisateur doit être spécifier") String getNomEntreprise() {
-        return this.nomEntreprise;
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public EntrepriseType getType() {
+        return type;
     }
 
-    public void setNomEntreprise(@NotEmpty(message = "Nom Utilisateur doit être spécifier") String nomEntreprise) {
-        this.nomEntreprise = nomEntreprise;
+    public void setType(EntrepriseType type) {
+        this.type = type;
+    }
+
+    public boolean isBloque() {
+        return bloque;
+    }
+
+    public void setBloque(boolean bloque) {
+        this.bloque = bloque;
     }
 }

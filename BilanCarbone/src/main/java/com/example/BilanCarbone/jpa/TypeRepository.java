@@ -1,12 +1,14 @@
 package com.example.BilanCarbone.jpa;
 
 import com.example.BilanCarbone.entity.Entreprise;
+import com.example.BilanCarbone.entity.Facteur;
 import com.example.BilanCarbone.entity.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +43,7 @@ public interface TypeRepository extends JpaRepository<Type, Long> {
     List<Type> findAllByParentIsNotNullAndIsDeletedIsNull( );
     Type findByIdAndIsDeletedIsNull(Long id);
     List<Type> findAllByParentAndIsDeletedIsNull(Type parent);
+    List<Type> findAllByFacteurs(Facteur facteur);
     //perso
     Page<Type> findAllByNameContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(String nom, Entreprise entreprise, Pageable pageable);
     Page<Type> findAllByEntrepriseAndIsDeletedIsNull(Entreprise entreprise, Pageable pageable);

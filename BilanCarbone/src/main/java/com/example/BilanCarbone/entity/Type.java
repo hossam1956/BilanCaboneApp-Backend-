@@ -52,10 +52,11 @@ public class Type extends BaseEntity {
      * Les facteurs sont liés à ce type et sont automatiquement supprimés si ce type est supprimé (cascade de suppression).
      * </p>
      */
-    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL)
+    @OneToMany
     private List<Facteur> facteurs;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+
+    @ManyToOne
     @JoinColumn(name = "entreprise_id")
     private Entreprise entreprise;
 
