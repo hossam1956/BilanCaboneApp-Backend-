@@ -23,7 +23,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -71,7 +70,7 @@ public class UtilisateurService {
         if (utilisateurRepository.findById(ID).isPresent()) {
             return utilisateurRepository.findById(ID).get().getEntreprise();
         } else {
-            throw new RuntimeException("L'utilisateur n'est pas trouvé ");
+            throw new RuntimeException("L'utilisateur n'est pas trouvé à cette entreprise ");
         }
     }
     /**
