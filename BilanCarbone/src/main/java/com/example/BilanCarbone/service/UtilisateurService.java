@@ -2,6 +2,7 @@ package com.example.BilanCarbone.service;
 
 import com.example.BilanCarbone.common.PageResponse;
 import com.example.BilanCarbone.config.CustomUserRepresentation;
+import com.example.BilanCarbone.config.CustomUserRepresentationWithRole;
 import com.example.BilanCarbone.dto.UtilisateurCreationRequest;
 import com.example.BilanCarbone.dto.UtilisateurModificationRequest;
 import com.example.BilanCarbone.entity.Entreprise;
@@ -10,6 +11,7 @@ import com.example.BilanCarbone.jpa.EntrepriseRepository;
 import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +158,7 @@ public class UtilisateurService {
 
     //==========================
     @Transactional
-    public List<CustomUserRepresentation> getAllUtilisateurList(String token,Object roles,Object idUser) {
+    public List<CustomUserRepresentationWithRole> getAllUtilisateurList(String token,Object roles,Object idUser) {
 
 
         String URL = keycloakURL + "/admin/realms/" + realm + "/users";
@@ -198,11 +200,31 @@ public class UtilisateurService {
 
         }
 
-
+        //Recuperation du role
+        List<CustomUserRepresentationWithRole>  customUserRepresentationWithRolesList=new ArrayList<>();
         List<CustomUserRepresentation> customUsers = utilisateurs.stream()
                 .map(user -> new CustomUserRepresentation(user, fetchEntrepriseOfUtilisateur(user)))
                 .collect(Collectors.toList());
-       return customUsers;
+        for(CustomUserRepresentation customUser:customUsers){
+            String URL_GET_ROLE = keycloakURL + "/admin/realms/" + realm + "/users/"+customUser.getUserRepresentation().getId()+"/role-mappings/realm";
+            HttpHeaders headersRole = new HttpHeaders();
+            headersRole.setBearerAuth(token);
+            HttpEntity<String> httpEntityRole = new HttpEntity<>(headersRole);
+            ResponseEntity<List<RoleRepresentation>> responseRole = restTemplate.exchange(
+                    URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {});
+
+            String role=(responseRole.getBody()).get(0).getName();
+            customUserRepresentationWithRolesList.add(CustomUserRepresentationWithRole.builder()
+                            .customUserRepresentation(customUser)
+                            .role(role)
+                            .build());
+        }
+
+
+
+
+
+        return customUserRepresentationWithRolesList;
     }
     //==========================
 
