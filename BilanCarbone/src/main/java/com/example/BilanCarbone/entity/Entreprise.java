@@ -3,11 +3,17 @@ package com.example.BilanCarbone.entity;
 import com.example.BilanCarbone.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Entreprise extends BaseEntity {
 
     @NotBlank(message = "Le nom de l'entreprise est obligatoire")
@@ -20,8 +26,6 @@ public class Entreprise extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private EntrepriseType type;
-
-
     // Getters et setters
 
     public String getNom() {
