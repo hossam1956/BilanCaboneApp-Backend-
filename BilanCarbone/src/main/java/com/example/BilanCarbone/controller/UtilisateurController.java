@@ -53,6 +53,14 @@ public class UtilisateurController {
         Object idUser=jwtClaims.extractClaims(token).get("sub");
         return utilisateurService.getAllUtilisateur(page, size, search, token,roles,idUser);
     }
+    @GetMapping("list")
+    public List<CustomUserRepresentation> getAllUtilisateurList(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+        Object roles=jwtClaims.extractClaims(token).get("realm_access");
+        Object idUser=jwtClaims.extractClaims(token).get("sub");
+        return utilisateurService.getAllUtilisateurList(token,roles,idUser);
+    }
     @GetMapping("id")
     public CustomUserRepresentation getUtilisateurById(
             @RequestParam(defaultValue = "0")  String ID,

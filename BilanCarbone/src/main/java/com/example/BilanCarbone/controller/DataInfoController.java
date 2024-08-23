@@ -2,6 +2,7 @@ package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.dto.DataInfoRequest;
 import com.example.BilanCarbone.entity.DataInfo;
+import com.example.BilanCarbone.jpa.DataInfoRepository;
 import com.example.BilanCarbone.service.DataInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,8 @@ public class DataInfoController {
 
     @Autowired
     private DataInfoService dataInfoService;
+
+    private DataInfoRepository dataInfoRepository;
 
     /**
      * Endpoint pour insérer un nouvel objet DataInfo.
@@ -81,6 +84,11 @@ public class DataInfoController {
     @GetMapping("/{IdUtilisateur}")
     public List<DataInfo> getIdUtilisateur(@PathVariable String IdUtilisateur) {
         return dataInfoService.getDataInfoByIdUtilisateur(IdUtilisateur);
+    }
+
+    @DeleteMapping("all")
+    public void viderDataInfoController(){
+        dataInfoRepository.deleteAll();
     }
 
     /**
