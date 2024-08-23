@@ -44,7 +44,7 @@ public class SecurityConfig {
                                // .requestMatchers("/api/demande/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT,"api/utilisateur").permitAll()
                                 .requestMatchers("api/utilisateur").permitAll()
-                                .requestMatchers("/api/entreprise").permitAll()
+                                .requestMatchers("/api/entreprises").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/api/demande").permitAll()
                                 .anyRequest().permitAll()
                 )
