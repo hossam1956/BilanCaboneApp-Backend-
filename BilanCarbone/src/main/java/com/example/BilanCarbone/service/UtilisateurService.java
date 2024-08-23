@@ -23,7 +23,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -71,7 +70,7 @@ public class UtilisateurService {
         if (utilisateurRepository.findById(ID).isPresent()) {
             return utilisateurRepository.findById(ID).get().getEntreprise();
         } else {
-            throw new RuntimeException("L'utilisateur n'est pas trouvé ");
+            throw new RuntimeException("L'utilisateur n'est pas trouvé à cette entreprise ");
         }
     }
     /**
@@ -154,6 +153,59 @@ public class UtilisateurService {
                 .last(isLast)
                 .build();
     }
+
+    //==========================
+    @Transactional
+    public List<CustomUserRepresentation> getAllUtilisateurList(String token,Object roles,Object idUser) {
+
+
+        String URL = keycloakURL + "/admin/realms/" + realm + "/users";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<List<UserRepresentation>> response = restTemplate.exchange(
+                URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {});
+
+        List<UserRepresentation> utilisateurs = response.getBody();;
+        if(roles.toString().contains("ADMIN")){
+            utilisateurs = response.getBody();
+            utilisateurs = utilisateurs.stream()
+                    .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
+                    .collect(Collectors.toList());
+        }
+        else if(roles.toString().contains("MANAGER")){
+
+            String URL_GET_CONNECTED_USER = keycloakURL + "/admin/realms/" + realm + "/users/"+String.valueOf(idUser);
+            ResponseEntity<UserRepresentation> response_GET_CONNECTED_USER = restTemplate.exchange(URL_GET_CONNECTED_USER,HttpMethod.GET,httpEntity,UserRepresentation.class);
+            if (response_GET_CONNECTED_USER.getStatusCode().is2xxSuccessful()) {
+                UserRepresentation user = response_GET_CONNECTED_USER.getBody();
+                Entreprise entreprise=fetchEntrepriseOfUtilisateur(user);
+
+                List<Utilisateur> Users=utilisateurRepository.findByEntreprise(entreprise);
+                List<String> Ids=new ArrayList<>();
+                for(Utilisateur utilisateur:Users){
+                    Ids.add(utilisateur.getId());
+                }
+                utilisateurs = utilisateurs.stream()
+                        .filter(utilisateur ->Ids.contains(utilisateur.getId()))
+                        .filter(utilisateur ->!user.getId().equals(utilisateur.getId()))
+                        .collect(Collectors.toList());
+            } else {
+                throw new RuntimeException("getAllUtilisateur:Failed to fetch Connected User ");
+            }
+
+
+        }
+
+
+        List<CustomUserRepresentation> customUsers = utilisateurs.stream()
+                .map(user -> new CustomUserRepresentation(user, fetchEntrepriseOfUtilisateur(user)))
+                .collect(Collectors.toList());
+       return customUsers;
+    }
+    //==========================
+
     /**
      * Récupère un utilisateur spécifique à partir de son identifiant dans Keycloak.
      *
