@@ -141,6 +141,26 @@ public class DataInfoService {
     }
 
     /**
+     * Supprime un DataInfo spécifique basé sur l'ID du Facteur.
+     *
+     * @param IdFacteur L'ID du Facteur.
+     * @throws RuntimeException si le DataInfo correspondant n'est pas trouvé.
+     */
+    public void deleteDataByIdFateur(Long IdFacteur) {
+        List<DataInfo> dataInfoByFacteurs = dataInfoRepository.findAllByIdFacteur(IdFacteur);
+        try{
+            for(DataInfo dataInfoByFacteur:dataInfoByFacteurs){
+                dataInfoRepository.delete(dataInfoByFacteur);
+            }
+        }
+        catch (RuntimeException e){
+            throw new RuntimeException("Delete dataInfo by idFacteur Failed :  "+e);
+        }
+
+
+    }
+
+    /**
      * Récupère la quantité d'un Facteur spécifique associée à un utilisateur à une date donnée.
      *
      * @param IdFacteur L'ID du Facteur.

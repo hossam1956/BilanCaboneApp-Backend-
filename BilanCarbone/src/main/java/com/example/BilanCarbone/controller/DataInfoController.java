@@ -90,6 +90,15 @@ public class DataInfoController {
     public void viderDataInfoController(){
         dataInfoRepository.deleteAll();
     }
+    /**
+     * Endpoint pour supprimer tous les DataInfo associés à un facteur spécifique.
+     *
+     * @param IdFacteur L'ID du facteur.
+     */
+    @DeleteMapping("facteur")
+    public void deleteDataByIdFateur(@RequestParam Long IdFacteur){
+        dataInfoService.deleteDataByIdFateur(IdFacteur);
+    }
 
     /**
      * Endpoint pour supprimer un DataInfo spécifique basé sur l'ID du Facteur, l'ID de l'utilisateur, et la date.
