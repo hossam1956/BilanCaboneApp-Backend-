@@ -6,14 +6,19 @@ import com.example.BilanCarbone.entity.Entreprise;
 import com.example.BilanCarbone.entity.Facteur;
 import com.example.BilanCarbone.entity.Utilisateur;
 import com.example.BilanCarbone.jpa.DataInfoRepository;
+import com.example.BilanCarbone.jpa.EntrepriseRepository;
 import com.example.BilanCarbone.jpa.FacteurRepository;
 import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service pour la gestion des objets DataInfo.
@@ -30,7 +35,8 @@ public class DataInfoService {
     private UtilisateurRepository utilisateurRepository;
     @Autowired
     private DataInfoRepository dataInfoRepository;
-
+    @Autowired
+    private EntrepriseRepository entrepriseRepository;
     /**
      * Insère un nouvel objet DataInfo dans la base de données.
      * Si un DataInfo avec les mêmes facteur, utilisateur, et date existe déjà, il est supprimé avant l'insertion.
@@ -175,5 +181,37 @@ public class DataInfoService {
                         dataInfoByFacteur.getDate().equals(date))
                 .findFirst();
         return dataInfo.map(DataInfo::getQuantity).orElse(null);
+    }
+
+
+    public Map<LocalDate,Double> getDataInfoOfLast7DaysOfEntreprise(Long idEntreprise){
+        Optional<Entreprise> entreprise=entrepriseRepository.findById(idEntreprise);
+        if (entreprise.isPresent()) {
+            List<DataInfo> dataInfos = dataInfoRepository.findAllByEntreprise(entreprise.get());
+            Map<LocalDate, Double> emissionSum = dataInfos.stream()
+                    .collect(Collectors.groupingBy(
+                            DataInfo::getDate,
+                            Collectors.summingDouble(DataInfo::getEmission)
+                    ));
+
+            LocalDate today = LocalDate.now();
+            LocalDate sevenDaysAgo = today.minus(7, ChronoUnit.DAYS);
+
+            Map<LocalDate, Double> last7DaysMap = emissionSum.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isBefore(sevenDaysAgo) && !entry.getKey().isAfter(today))
+                    .sorted(Map.Entry.<LocalDate, Double>comparingByKey().reversed()) // Optional: Sort by date in descending order
+                    .limit(7)
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (e1, e2) -> e1,
+                            LinkedHashMap::new
+                    ));
+
+            return last7DaysMap;
+        } else {
+            throw new RuntimeException("Entreprise not found with ID: " + idEntreprise);
+        }
+
     }
 }

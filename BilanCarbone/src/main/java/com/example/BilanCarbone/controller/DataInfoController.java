@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrôleur REST pour gérer les opérations liées aux objets DataInfo.
@@ -22,7 +23,7 @@ public class DataInfoController {
 
     @Autowired
     private DataInfoService dataInfoService;
-
+    @Autowired
     private DataInfoRepository dataInfoRepository;
 
     /**
@@ -112,5 +113,15 @@ public class DataInfoController {
                                           @RequestParam String IdUtilisateur,
                                           @RequestParam LocalDate date) {
         dataInfoService.uncheckFacteur(IdFacteur, IdUtilisateur, date);
+    }
+
+    @GetMapping("dates")
+    public List<LocalDate> getExistantDates(@RequestParam String IdUtilisateur){
+        return dataInfoRepository.findDistinctDatesByIdUtilisateur(IdUtilisateur);
+    }
+
+    @GetMapping("DataOfLast7Days")
+    public Map<LocalDate,Double> getDataInfoOfLast7DaysOfEntreprise(@RequestParam Long idEntreprise){
+        return dataInfoService.getDataInfoOfLast7DaysOfEntreprise(idEntreprise);
     }
 }
