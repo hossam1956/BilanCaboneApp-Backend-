@@ -15,7 +15,7 @@ public interface FacteurService {
     FacteurResponse update(Long id, FacteurRequest request,Type type,boolean all);
     FacteurResponse addFacteur(FacteurRequest request, Type type);
     List<String> getType();
-    List<FacteurResponse> list_facteur(Long facteurId);
+    List<FacteurResponse> list_facteur(Long facteurId,boolean all);
     FacteurResponse delete_facteur(Long facteurId);
     FacteurResponse delete_force_facteur(Long facteurId);
     FacteurResponse recovery_facteur(Long facteurId);
