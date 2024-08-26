@@ -127,8 +127,11 @@ public class FacteurController {
      */
     @GetMapping("/all")
     public ResponseEntity<List<FacteurResponse>> list_all_facteur(
-            @RequestParam(defaultValue = "-1") Long parent) {
-        return ResponseEntity.ok(facteurService.list_facteur(parent));
+            @RequestParam(defaultValue = "-1") Long parent,
+            @RequestParam(defaultValue = "false") boolean all
+
+    ) {
+        return ResponseEntity.ok(facteurService.list_facteur(parent,all));
     }
 
     /**

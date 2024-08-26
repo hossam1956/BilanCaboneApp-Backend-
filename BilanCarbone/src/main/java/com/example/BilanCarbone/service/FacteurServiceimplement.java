@@ -151,7 +151,7 @@ public class FacteurServiceimplement implements FacteurService {
     }
 
     @Override
-    public List<FacteurResponse> list_facteur(Long idtype) {
+    public List<FacteurResponse> list_facteur(Long idtype,boolean all) {
         Entreprise entr =check_user_permission_and_get_entreprise(false);
         List<Facteur> list;
         if (idtype > 0) {
@@ -159,9 +159,9 @@ public class FacteurServiceimplement implements FacteurService {
                     .orElseThrow(() -> new EntityNotFoundException("type not found with id: " + idtype));
 
 
-            list = facteurRepository.findAllActiveByTypeAndEntreprise(type,entr);
+            list = !all ? facteurRepository.findAllActiveByTypeAndEntreprise(type,entr) :facteurRepository.findAllByTypeAndEntreprise(type,entr) ;
         } else {
-            list = facteurRepository.findAllActiveAndNotDeletedWithOptionalEntreprise(entr);
+            list =!all ? facteurRepository.findAllActiveAndNotDeletedWithOptionalEntreprise(entr) : facteurRepository.findAllNotDeletedWithOptionalEntreprise(entr) ;
         }
         return list.stream().map(facteurMapper::toFacteurResponse_simple).toList();
     }

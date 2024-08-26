@@ -2,6 +2,7 @@ package com.example.BilanCarbone.controller;
 
 import com.example.BilanCarbone.common.PageResponse;
 import com.example.BilanCarbone.config.CustomUserRepresentation;
+import com.example.BilanCarbone.config.CustomUserRepresentationWithRole;
 import com.example.BilanCarbone.dto.UtilisateurCreationRequest;
 import com.example.BilanCarbone.dto.UtilisateurModificationRequest;
 import com.example.BilanCarbone.entity.Utilisateur;
@@ -54,7 +55,7 @@ public class UtilisateurController {
         return utilisateurService.getAllUtilisateur(page, size, search, token,roles,idUser);
     }
     @GetMapping("list")
-    public List<CustomUserRepresentation> getAllUtilisateurList(
+    public List<CustomUserRepresentationWithRole> getAllUtilisateurList(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
         Object roles=jwtClaims.extractClaims(token).get("realm_access");
@@ -124,11 +125,11 @@ public class UtilisateurController {
     }
 
     @GetMapping("user")
-            public List<Utilisateur> getUtilisateur(){
+    public List<Utilisateur> getUtilisateur(){
         return utilisateurRepository.findAll();
     }
     @DeleteMapping("user")
     public void SupprimerAllUtilisateur(){
-         utilisateurRepository.deleteAll();
+        utilisateurRepository.deleteAll();
     }
 }
