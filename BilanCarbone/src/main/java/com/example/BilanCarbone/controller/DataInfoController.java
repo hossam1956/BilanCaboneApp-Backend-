@@ -127,33 +127,13 @@ public class DataInfoController {
     }
 
     /**
-     * Récupère les données des 7 derniers jours pour une entreprise donnée.
+     * Récupère les données de emission.
      *
      * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
-     * @return Une map contenant les dates et les valeurs d'émission pour les 7 derniers jours.
+     * @return Une liste des sommes mensuelles d'émission.
      */
-    @GetMapping("DataOfLast7Days")
-    public Map<LocalDate,Double> getDataInfoOfLast7DaysOfEntreprise(@RequestParam Long idEntreprise){
-        return dataInfoService.getDataInfoOfLast7DaysOfEntreprise(idEntreprise);
-    }
-    /**
-     * Récupère les données des 3 derniers mois pour une entreprise donnée.
-     *
-     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
-     * @return Une liste des sommes mensuelles d'émission pour les 3 derniers mois.
-     */
-    @GetMapping("DataOfLast3Month")
-    public List<Double> getDataInfoOfLast3monthOfEntreprise(@RequestParam Long idEntreprise){
-        return dataInfoService.getDataInfoOfLast3monthOfEntreprise(idEntreprise);
-    }
-    /**
-     * Récupère les données de la dernière année pour une entreprise donnée.
-     *
-     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
-     * @return Une liste des sommes mensuelles d'émission pour les 12 derniers mois.
-     */
-    @GetMapping("DataOfLastYear")
-    public List<Double> getDataInfoOfLastYearfEntreprise(@RequestParam Long idEntreprise){
-        return dataInfoService.getDataInfoOfLastYearfEntreprise(idEntreprise);
+    @GetMapping("getData")
+    public Map<LocalDate,Double> getDataInfoOfEntreprise(@RequestParam Long idEntreprise,LocalDate firstDate,LocalDate lastDate){
+        return dataInfoService.getDataInfoOfEntreprise(idEntreprise,firstDate,lastDate);
     }
 }
