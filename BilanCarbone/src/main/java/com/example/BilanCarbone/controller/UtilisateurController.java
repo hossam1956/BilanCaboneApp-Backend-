@@ -124,7 +124,7 @@ public class UtilisateurController {
     }
 
     @GetMapping("user")
-    public List<Utilisateur> getUtilisateur(){
+            public List<Utilisateur> getUtilisateur(){
         return utilisateurRepository.findAll();
     }
     @DeleteMapping("user")
