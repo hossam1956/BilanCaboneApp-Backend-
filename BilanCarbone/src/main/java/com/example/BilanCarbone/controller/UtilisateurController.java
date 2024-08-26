@@ -130,6 +130,6 @@ public class UtilisateurController {
     }
     @DeleteMapping("user")
     public void SupprimerAllUtilisateur(){
-         utilisateurRepository.deleteAll();
+        utilisateurRepository.deleteAll();
     }
 }

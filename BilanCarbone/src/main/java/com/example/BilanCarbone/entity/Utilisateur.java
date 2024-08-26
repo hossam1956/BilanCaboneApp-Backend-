@@ -1,9 +1,16 @@
 package com.example.BilanCarbone.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.example.BilanCarbone.common.BaseEntity;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 /**
  * Représente un utilisateur dans le système.
@@ -11,6 +18,10 @@ import jakarta.persistence.ManyToOne;
  * @author @CHALABI Hossam
  */
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class Utilisateur {
 
     @Id
@@ -19,113 +30,21 @@ public class Utilisateur {
     @ManyToOne
     @JoinColumn(name = "entreprise_id", nullable = false)
     private Entreprise entreprise;
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdDate;
 
     /**
-     * Constructeur avec paramètres pour la classe Utilisateur.
-     *
-     * @param id l'identifiant de l'utilisateur
-     * @param entreprise l'entreprise associée à l'utilisateur
+     * Date et heure de la dernière modification de l'entité, mise à jour automatiquement lors des modifications.
      */
-    public Utilisateur(String id, Entreprise entreprise) {
-        this.id = id;
-        this.entreprise = entreprise;
-    }
+    @UpdateTimestamp
+    @Column(insertable = false)
+    private LocalDateTime UpdateDate;
 
     /**
-     * Constructeur par défaut pour la classe Utilisateur.
+     * Date et heure de suppression logique de l'entité. Si ce champ est non nul, l'entité est considérée comme supprimée.
+     * La valeur par défaut est {@code null}.
      */
-    public Utilisateur() {
-    }
-
-    /**
-     * Crée un nouveau constructeur pour Utilisateur.
-     *
-     * @return un constructeur de Utilisateur
-     */
-    public static UtilisateurBuilder builder() {
-        return new UtilisateurBuilder();
-    }
-
-    /**
-     * Obtient l'identifiant de l'utilisateur.
-     *
-     * @return l'identifiant de l'utilisateur
-     */
-    public String getId() {
-        return this.id;
-    }
-
-    /**
-     * Obtient l'entreprise associée à l'utilisateur.
-     *
-     * @return l'entreprise associée à l'utilisateur
-     */
-    public Entreprise getEntreprise() {
-        return this.entreprise;
-    }
-
-    /**
-     * Définit l'identifiant de l'utilisateur.
-     *
-     * @param id l'identifiant de l'utilisateur à définir
-     */
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    /**
-     * Définit l'entreprise associée à l'utilisateur.
-     *
-     * @param entreprise l'entreprise à associer à l'utilisateur
-     */
-    public void setEntreprise(Entreprise entreprise) {
-        this.entreprise = entreprise;
-    }
-
-    /**
-     * Classe interne pour construire des instances de Utilisateur.
-     */
-    public static class UtilisateurBuilder {
-        private String id;
-        private Entreprise entreprise;
-
-        UtilisateurBuilder() {
-        }
-
-        /**
-         * Définit l'identifiant de l'utilisateur pour le constructeur.
-         *
-         * @param id l'identifiant de l'utilisateur
-         * @return le constructeur d'utilisateur
-         */
-        public UtilisateurBuilder id(String id) {
-            this.id = id;
-            return this;
-        }
-
-        /**
-         * Définit l'entreprise associée à l'utilisateur pour le constructeur.
-         *
-         * @param entreprise l'entreprise à associer à l'utilisateur
-         * @return le constructeur d'utilisateur
-         */
-        public UtilisateurBuilder entreprise(Entreprise entreprise) {
-            this.entreprise = entreprise;
-            return this;
-        }
-
-        /**
-         * Crée une nouvelle instance de Utilisateur.
-         *
-         * @return une nouvelle instance de Utilisateur
-         */
-        public Utilisateur build() {
-            return new Utilisateur(this.id, this.entreprise);
-        }
-
-        @Override
-        public String toString() {
-            return "Utilisateur.UtilisateurBuilder(id=" + this.id + ", entreprise=" + this.entreprise + ")";
-        }
-    }
+    @Column(columnDefinition = "timestamp default null")
+    private LocalDateTime isDeleted;
 }

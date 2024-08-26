@@ -95,7 +95,6 @@ public class UtilisateurService {
 
         ResponseEntity<List<UserRepresentation>> response = restTemplate.exchange(
                 URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {});
-
         List<UserRepresentation> utilisateurs = response.getBody();;
         if(roles.toString().contains("ADMIN")){
             utilisateurs = response.getBody();
@@ -213,11 +212,26 @@ public class UtilisateurService {
             ResponseEntity<List<RoleRepresentation>> responseRole = restTemplate.exchange(
                     URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {});
 
-            String role=(responseRole.getBody()).get(0).getName();
+            String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYEE"};
+            List<RoleRepresentation> list_roles = responseRole.getBody();
+            String foundRole="";
+            if (list_roles != null) {
+                for (String priorityRole : rolePriority) {
+                    for (RoleRepresentation role : list_roles) {
+                        if (role.getName().equalsIgnoreCase(priorityRole)) {
+                            foundRole = role.getName();
+                            break;
+                        }
+                    }
+                    if (!foundRole.isEmpty()) {
+                        break;
+                    }
+                }
+            }
             customUserRepresentationWithRolesList.add(CustomUserRepresentationWithRole.builder()
-                            .customUserRepresentation(customUser)
-                            .role(role)
-                            .build());
+                    .customUserRepresentation(customUser)
+                    .role(foundRole)
+                    .build());
         }
 
 
