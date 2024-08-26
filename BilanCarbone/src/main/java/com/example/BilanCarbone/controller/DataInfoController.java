@@ -115,13 +115,45 @@ public class DataInfoController {
         dataInfoService.uncheckFacteur(IdFacteur, IdUtilisateur, date);
     }
 
+    /**
+     * Récupère les dates distinctes pour un utilisateur donné.
+     *
+     * @param IdUtilisateur L'identifiant de l'utilisateur pour lequel récupérer les dates.
+     * @return Une liste de dates distinctes.
+     */
     @GetMapping("dates")
     public List<LocalDate> getExistantDates(@RequestParam String IdUtilisateur){
         return dataInfoRepository.findDistinctDatesByIdUtilisateur(IdUtilisateur);
     }
 
+    /**
+     * Récupère les données des 7 derniers jours pour une entreprise donnée.
+     *
+     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
+     * @return Une map contenant les dates et les valeurs d'émission pour les 7 derniers jours.
+     */
     @GetMapping("DataOfLast7Days")
     public Map<LocalDate,Double> getDataInfoOfLast7DaysOfEntreprise(@RequestParam Long idEntreprise){
         return dataInfoService.getDataInfoOfLast7DaysOfEntreprise(idEntreprise);
+    }
+    /**
+     * Récupère les données des 3 derniers mois pour une entreprise donnée.
+     *
+     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
+     * @return Une liste des sommes mensuelles d'émission pour les 3 derniers mois.
+     */
+    @GetMapping("DataOfLast3Month")
+    public List<Double> getDataInfoOfLast3monthOfEntreprise(@RequestParam Long idEntreprise){
+        return dataInfoService.getDataInfoOfLast3monthOfEntreprise(idEntreprise);
+    }
+    /**
+     * Récupère les données de la dernière année pour une entreprise donnée.
+     *
+     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
+     * @return Une liste des sommes mensuelles d'émission pour les 12 derniers mois.
+     */
+    @GetMapping("DataOfLastYear")
+    public List<Double> getDataInfoOfLastYearfEntreprise(@RequestParam Long idEntreprise){
+        return dataInfoService.getDataInfoOfLastYearfEntreprise(idEntreprise);
     }
 }

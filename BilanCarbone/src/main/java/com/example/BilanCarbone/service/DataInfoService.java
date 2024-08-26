@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -183,7 +180,13 @@ public class DataInfoService {
         return dataInfo.map(DataInfo::getQuantity).orElse(null);
     }
 
-
+    /**
+     * Récupère les informations d'émissions de CO2 pour les 7 derniers jours d'une entreprise.
+     *
+     * @param idEntreprise l'ID de l'entreprise pour laquelle les données doivent être récupérées.
+     * @return Une map contenant les dates des 7 derniers jours comme clés et la somme des émissions de CO2 pour chaque jour comme valeurs.
+     * @throws RuntimeException si l'entreprise avec l'ID spécifié n'est pas trouvée.
+     */
     public Map<LocalDate,Double> getDataInfoOfLast7DaysOfEntreprise(Long idEntreprise){
         Optional<Entreprise> entreprise=entrepriseRepository.findById(idEntreprise);
         if (entreprise.isPresent()) {
@@ -199,7 +202,7 @@ public class DataInfoService {
 
             Map<LocalDate, Double> last7DaysMap = emissionSum.entrySet().stream()
                     .filter(entry -> !entry.getKey().isBefore(sevenDaysAgo) && !entry.getKey().isAfter(today))
-                    .sorted(Map.Entry.<LocalDate, Double>comparingByKey().reversed()) // Optional: Sort by date in descending order
+                    .sorted(Map.Entry.comparingByKey())
                     .limit(7)
                     .collect(Collectors.toMap(
                             Map.Entry::getKey,
@@ -209,6 +212,118 @@ public class DataInfoService {
                     ));
 
             return last7DaysMap;
+        } else {
+            throw new RuntimeException("Entreprise not found with ID: " + idEntreprise);
+        }
+
+    }
+
+    /**
+     * Récupère les informations d'émissions de CO2 pour les 3 derniers mois d'une entreprise.
+     *
+     * @param idEntreprise l'ID de l'entreprise pour laquelle les données doivent être récupérées.
+     * @return Une liste de doubles représentant les émissions totales de CO2 pour chaque mois des 3 derniers mois,
+     *         où chaque entrée correspond à un mois, le plus ancien en premier.
+     * @throws RuntimeException si l'entreprise avec l'ID spécifié n'est pas trouvée.
+     */
+    public List<Double> getDataInfoOfLast3monthOfEntreprise(Long idEntreprise){
+        Optional<Entreprise> entreprise=entrepriseRepository.findById(idEntreprise);
+        if (entreprise.isPresent()) {
+            List<DataInfo> dataInfos = dataInfoRepository.findAllByEntreprise(entreprise.get());
+            Map<LocalDate, Double> emissionSum = dataInfos.stream()
+                    .collect(Collectors.groupingBy(
+                            DataInfo::getDate,
+                            Collectors.summingDouble(DataInfo::getEmission)
+                    ));
+
+            LocalDate today = LocalDate.now();
+            LocalDate startOfCurrentMonth = today.withDayOfMonth(1);
+            LocalDate startOfPreviousMonth = startOfCurrentMonth.minusMonths(1).withDayOfMonth(1);
+            LocalDate startOfMonthBeforePrevious = startOfPreviousMonth.minusMonths(1).withDayOfMonth(1);
+
+            List<Double> monthlyEmissions = new ArrayList<>();
+
+
+
+
+
+            double monthBeforePreviousSum = emissionSum.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isBefore(startOfMonthBeforePrevious) && entry.getKey().isBefore(startOfPreviousMonth))
+                    .mapToDouble(Map.Entry::getValue)
+                    .sum();
+
+            monthlyEmissions.add(monthBeforePreviousSum);
+
+            double previousMonthSum = emissionSum.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isBefore(startOfPreviousMonth) && entry.getKey().isBefore(startOfCurrentMonth))
+                    .mapToDouble(Map.Entry::getValue)
+                    .sum();
+            monthlyEmissions.add(previousMonthSum);
+
+            double currentMonthSum = emissionSum.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isBefore(startOfCurrentMonth))
+                    .mapToDouble(Map.Entry::getValue)
+                    .sum();
+            monthlyEmissions.add(currentMonthSum);
+            return monthlyEmissions;
+
+        } else {
+            throw new RuntimeException("Entreprise not found with ID: " + idEntreprise);
+        }
+
+    }
+
+    /**
+     * Récupère les informations d'émissions de CO2 pour les 12 derniers mois d'une entreprise.
+     *
+     * @param idEntreprise l'ID de l'entreprise pour laquelle les données doivent être récupérées.
+     * @return Une liste de doubles représentant les émissions totales de CO2 pour chaque mois des 12 derniers mois,
+     *         où chaque entrée correspond à un mois, le plus ancien en premier.
+     * @throws RuntimeException si l'entreprise avec l'ID spécifié n'est pas trouvée.
+     */
+    public List<Double> getDataInfoOfLastYearfEntreprise(Long idEntreprise){
+        Optional<Entreprise> entreprise=entrepriseRepository.findById(idEntreprise);
+        if (entreprise.isPresent()) {
+            List<DataInfo> dataInfos = dataInfoRepository.findAllByEntreprise(entreprise.get());
+            Map<LocalDate, Double> emissionSum = dataInfos.stream()
+                    .collect(Collectors.groupingBy(
+                            DataInfo::getDate,
+                            Collectors.summingDouble(DataInfo::getEmission)
+                    ));
+
+            LocalDate today = LocalDate.now();
+            LocalDate startOfCurrentMonth = today.withDayOfMonth(1);
+            LocalDate startOfPreviousMonth = startOfCurrentMonth.minusMonths(1).withDayOfMonth(1);
+
+            List<Double> monthlyEmissions = new ArrayList<>();
+
+            for(int i=0;i<10;i++){
+                LocalDate startOfPreviousMonth2 = startOfCurrentMonth.minusMonths(1+i).withDayOfMonth(1);
+                LocalDate startOfMonthBeforePrevious = startOfPreviousMonth.minusMonths(1+i).withDayOfMonth(1);
+                double monthBeforePreviousSum = emissionSum.entrySet().stream()
+                        .filter(entry -> !entry.getKey().isBefore(startOfMonthBeforePrevious) && entry.getKey().isBefore(startOfPreviousMonth2))
+                        .mapToDouble(Map.Entry::getValue)
+                        .sum();
+
+                monthlyEmissions.add(monthBeforePreviousSum);
+            }
+
+            double previousMonthSum = emissionSum.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isBefore(startOfPreviousMonth) && entry.getKey().isBefore(startOfCurrentMonth))
+                    .mapToDouble(Map.Entry::getValue)
+                    .sum();
+            monthlyEmissions.add(previousMonthSum);
+
+            double currentMonthSum = emissionSum.entrySet().stream()
+                    .filter(entry -> !entry.getKey().isBefore(startOfCurrentMonth))
+                    .mapToDouble(Map.Entry::getValue)
+                    .sum();
+            monthlyEmissions.add(currentMonthSum);
+
+
+
+            return monthlyEmissions;
+
         } else {
             throw new RuntimeException("Entreprise not found with ID: " + idEntreprise);
         }
