@@ -12,16 +12,14 @@ import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.mapper.FacteurMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.AccessDeniedException;
 
-import java.security.PrivateKey;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -35,13 +33,21 @@ import java.util.*;
  * </p>
  */
 @Service
-@RequiredArgsConstructor
 public class FacteurServiceimplement implements FacteurService {
     private final FacteurRepository facteurRepository;
     private final TypeRepository typeRepository;
     private final FacteurMapper facteurMapper;
     private final Userget userclaim;
     private final UtilisateurRepository userRepository;
+
+    public FacteurServiceimplement(FacteurRepository facteurRepository, TypeRepository typeRepository, FacteurMapper facteurMapper, Userget userclaim, UtilisateurRepository userRepository) {
+        this.facteurRepository = facteurRepository;
+        this.typeRepository = typeRepository;
+        this.facteurMapper = facteurMapper;
+        this.userclaim = userclaim;
+        this.userRepository = userRepository;
+    }
+
     @Override
     public PageResponse<FacteurResponse> getAllFacteurs(int page, boolean my, int size, String search, String... sortBy) {
         List<Sort.Order> orders = buildSortOrders(sortBy);
@@ -74,28 +80,27 @@ public class FacteurServiceimplement implements FacteurService {
     }
 
 
-
     @Override
     public FacteurResponse getFacteurById(Long id) {
-        return facteurMapper.toFacteurResponse(findbyid(id,false));
+        return facteurMapper.toFacteurResponse(findbyid(id, false));
     }
 
     @Override
-    public FacteurResponse update(Long id, FacteurRequest request,Type type,boolean all) {
+    public FacteurResponse update(Long id, FacteurRequest request, Type type, boolean all) {
         Facteur facteur = null;
-        if(all){
-            facteur=facteurRepository.findById(id).orElseThrow(
-                    ()->{
+        if (all) {
+            facteur = facteurRepository.findById(id).orElseThrow(
+                    () -> {
                         throw new EntityNotFoundException("facteur not exist");
                     }
             );
-            if(facteur.getIsDeleted()!=null){
+            if (facteur.getIsDeleted() != null) {
                 this.recovery_facteur(id);
             }
-        }else{
-            facteur = findbyid(id,true);
+        } else {
+            facteur = findbyid(id, true);
         }
-        boolean check=check_owner(facteur,true);
+        boolean check = check_owner(facteur, true);
         if (!check) {
             throw new AccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
         }
@@ -113,7 +118,7 @@ public class FacteurServiceimplement implements FacteurService {
         if (request.active() != null && !request.active().equals(facteur.getActive())) {
             facteur.setActive(request.active());
         }
-        if(type!=null&& !type.getId().equals(facteur.getType().getId())){
+        if (type != null && !type.getId().equals(facteur.getType().getId())) {
             facteur.setType(type);
         }
         Facteur updatedFacteur = facteurRepository.save(facteur);
@@ -124,8 +129,8 @@ public class FacteurServiceimplement implements FacteurService {
     @Transactional
     @Override
     public FacteurResponse addFacteur(FacteurRequest request, Type type) {
-        Entreprise entr =check_owner_entreprise();
-        List<Facteur> existingFacteur = facteurRepository.findExactMatchByNomAndEntreprise(request.nom_facteur(),entr);
+        Entreprise entr = check_owner_entreprise();
+        List<Facteur> existingFacteur = facteurRepository.findExactMatchByNomAndEntreprise(request.nom_facteur(), entr);
         for (Facteur value : existingFacteur) {
             System.out.println(value);
         }
@@ -151,17 +156,17 @@ public class FacteurServiceimplement implements FacteurService {
     }
 
     @Override
-    public List<FacteurResponse> list_facteur(Long idtype,boolean all) {
-        Entreprise entr =check_user_permission_and_get_entreprise(false);
+    public List<FacteurResponse> list_facteur(Long idtype, boolean all) {
+        Entreprise entr = check_user_permission_and_get_entreprise(false);
         List<Facteur> list;
         if (idtype > 0) {
             Type type = typeRepository.findByIdAndIsDeletedIsNullAndEntreprise(idtype, entr)
                     .orElseThrow(() -> new EntityNotFoundException("type not found with id: " + idtype));
 
 
-            list = !all ? facteurRepository.findAllActiveByTypeAndEntreprise(type,entr) :facteurRepository.findAllByTypeAndEntreprise(type,entr) ;
+            list = !all ? facteurRepository.findAllActiveByTypeAndEntreprise(type, entr) : facteurRepository.findAllByTypeAndEntreprise(type, entr);
         } else {
-            list =!all ? facteurRepository.findAllActiveAndNotDeletedWithOptionalEntreprise(entr) : facteurRepository.findAllNotDeletedWithOptionalEntreprise(entr) ;
+            list = !all ? facteurRepository.findAllActiveAndNotDeletedWithOptionalEntreprise(entr) : facteurRepository.findAllNotDeletedWithOptionalEntreprise(entr);
         }
         return list.stream().map(facteurMapper::toFacteurResponse_simple).toList();
     }
@@ -169,7 +174,7 @@ public class FacteurServiceimplement implements FacteurService {
 
     @Override
     public FacteurResponse delete_facteur(Long facteurId) {
-        Facteur facteur = findbyid(facteurId,true);
+        Facteur facteur = findbyid(facteurId, true);
         if (facteur.getIsDeleted() != null) {
             throw new OperationNotPermittedException("le facteur " + facteurId + " déjà supprimé");
         }
@@ -205,8 +210,8 @@ public class FacteurServiceimplement implements FacteurService {
         if (facteur.getType() != null && facteur.getType().getIsDeleted() != null) {
             throw new OperationNotPermittedException("vous devez d'abord récupérer le type son nom :" + facteur.getNom() + ", et son id :" + facteur.getId());
         }
-        Boolean exit=search_facteur(facteur.getNom(),0);
-        if(exit){
+        Boolean exit = search_facteur(facteur.getNom(), 0);
+        if (exit) {
             throw new OperationNotPermittedException("Il y en a déjà un similaire de cette facteur");
         }
         facteur.setIsDeleted(null);
@@ -214,19 +219,20 @@ public class FacteurServiceimplement implements FacteurService {
     }
 
     @Override
-    public Boolean search_facteur(String search,int id) {
-        Entreprise entreprise=check_owner_entreprise();
-        Facteur facteur=facteurRepository.findByIdAndIsDeletedIsNull((long) id);
-        if(facteur!=null &&!Objects.equals(facteur.getEntreprise().getId(), entreprise.getId())) {
+    public Boolean search_facteur(String search, int id) {
+        Entreprise entreprise = check_owner_entreprise();
+        Facteur facteur = facteurRepository.findByIdAndIsDeletedIsNull((long) id);
+        if (facteur != null && !Objects.equals(facteur.getEntreprise().getId(), entreprise.getId())) {
             throw new AccessDeniedException("Accès refusé pour le rôle actuel.");
         }
-        if(facteur==null){
+        if (facteur == null) {
             return facteurRepository.existsByNomIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(search) ||
                     facteurRepository.existsByNomIgnoreCaseAndIsDeletedIsNullAndEntreprise(search, entreprise);
         }
         return facteurRepository.existsAllByNomIgnoreCaseAndIdNotAndIsDeletedNotNullAndEntrepriseIsNull(search, (long) id) ||
                 facteurRepository.existsAllByNomIgnoreCaseAndIdNotAndIsDeletedNotNullAndEntreprise(search, (long) id, entreprise);
     }
+
     @Override
     public PageResponse<FacteurResponse> get_All_deleted_Facteurs(int page, int size, String search, String... sortBy) {
         List<Sort.Order> orders = buildSortOrders(sortBy);
@@ -264,16 +270,17 @@ public class FacteurServiceimplement implements FacteurService {
                     facteurRepository.findAllByNomContainingIgnoreCaseAndIsDeletedNotNullAndEntrepriseIsNull(trimmedSearch, pageable);
         }
     }
+
     @Override
     public FacteurResponse tooglefactecurtoggleActivation(Long id, boolean activate) {
-        Facteur facteur = findbyid(id,true);
+        Facteur facteur = findbyid(id, true);
         if (facteur.getActive() == activate) {
             String action = activate ? "activé" : "désactivé";
             throw new OperationNotPermittedException("Le facteur " + id + " a déjà été " + action);
         }
         if (!activate) {
             Type type = facteur.getType();
-            if ( type != null && !type.getActive()) {
+            if (type != null && !type.getActive()) {
                 throw new OperationNotPermittedException("Le type " + id + " est désactivé (active ce type)");
             }
         }
@@ -308,6 +315,7 @@ public class FacteurServiceimplement implements FacteurService {
 
         return facteur;
     }
+
     private List<Sort.Order> buildSortOrders(String... sortBy) {
         List<Sort.Order> orders = new ArrayList<>();
         for (int i = 0; i < sortBy.length; i++) {
