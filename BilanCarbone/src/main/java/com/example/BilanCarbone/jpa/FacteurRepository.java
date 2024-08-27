@@ -15,9 +15,15 @@ import java.util.List;
 @Repository
 public interface FacteurRepository extends JpaRepository<Facteur, Long> {
     //global
-    @Query("SELECT f FROM Facteur f WHERE f.active = true AND f.isDeleted IS NULL AND (f.entreprise IS NULL OR f.entreprise = :entreprise)")
-    List<Facteur> findAllActiveAndNotDeletedWithOptionalEntreprise(@Param("entreprise") Entreprise entreprise);    @Query("SELECT f FROM Facteur f WHERE f.active = true AND f.type = :type AND f.isDeleted IS NULL AND (f.entreprise IS NULL OR f.entreprise = :entreprise)")
+    @Query("SELECT f FROM Facteur f WHERE f.active = true AND f.isDeleted IS NULL AND (f.entreprise IS NULL OR f.entreprise = :entreprise) ORDER BY f.createdDate DESC")
+    List<Facteur> findAllActiveAndNotDeletedWithOptionalEntreprise(@Param("entreprise") Entreprise entreprise);
+    @Query("SELECT f FROM Facteur f WHERE f.active = true AND f.type = :type AND f.isDeleted IS NULL AND (f.entreprise IS NULL OR f.entreprise = :entreprise) ORDER BY f.createdDate DESC")
     List<Facteur> findAllActiveByTypeAndEntreprise(@Param("type") Type type, @Param("entreprise") Entreprise entreprise);
+
+    @Query("SELECT f FROM Facteur f WHERE  f.type = :type AND f.isDeleted IS NULL AND (f.entreprise IS NULL OR f.entreprise = :entreprise) ORDER BY f.createdDate DESC")
+    List<Facteur> findAllByTypeAndEntreprise(@Param("type") Type type, @Param("entreprise") Entreprise entreprise);
+    @Query("SELECT f FROM Facteur f WHERE f.isDeleted IS NULL AND (f.entreprise IS NULL OR f.entreprise = :entreprise) ORDER BY f.createdDate DESC")
+    List<Facteur> findAllNotDeletedWithOptionalEntreprise(@Param("entreprise") Entreprise entreprise);
     Page<Facteur> findAllByNomContainingIgnoreCaseAndEntrepriseIsNullAndIsDeletedIsNull(String name, Pageable pageable);
     Page<Facteur> findAllByIsDeletedNotNullAndEntrepriseIsNull(Pageable pageable);
     Page<Facteur> findAllByNomContainingIgnoreCaseAndIsDeletedNotNullAndEntrepriseIsNull(String name, Pageable pageable);
