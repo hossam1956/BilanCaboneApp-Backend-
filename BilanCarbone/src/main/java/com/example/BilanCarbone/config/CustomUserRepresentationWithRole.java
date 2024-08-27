@@ -3,6 +3,9 @@ package com.example.BilanCarbone.config;
 /**
  * @author Oussama
  **/
+
+
+
 public class CustomUserRepresentationWithRole {
     private CustomUserRepresentation customUserRepresentation;
     private String role;

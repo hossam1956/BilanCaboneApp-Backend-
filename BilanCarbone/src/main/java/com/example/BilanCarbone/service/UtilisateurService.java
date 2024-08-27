@@ -216,6 +216,7 @@ public class UtilisateurService {
                     URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {
                     });
             String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYE"};
+
             List<RoleRepresentation> list_roles = responseRole.getBody();
             String foundRole = "";
             if (list_roles != null) {
