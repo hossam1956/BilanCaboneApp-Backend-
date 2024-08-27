@@ -95,11 +95,10 @@ public class UtilisateurService {
         HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
         ResponseEntity<List<UserRepresentation>> response = restTemplate.exchange(
-                URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {
-                });
-        List<UserRepresentation> utilisateurs = response.getBody();
-        ;
-        if (roles.toString().contains("ADMIN")) {
+                URL, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<UserRepresentation>>() {});
+        List<UserRepresentation> utilisateurs = response.getBody();;
+        if(roles.toString().contains("ADMIN")){
+
             utilisateurs = response.getBody();
             utilisateurs = utilisateurs.stream()
                     .filter(utilisateur -> !"admin".equals(utilisateur.getUsername()))
@@ -213,12 +212,12 @@ public class UtilisateurService {
             headersRole.setBearerAuth(token);
             HttpEntity<String> httpEntityRole = new HttpEntity<>(headersRole);
             ResponseEntity<List<RoleRepresentation>> responseRole = restTemplate.exchange(
-                    URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {
-                    });
-            String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYE"};
+                    URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {});
 
+            String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYEE"};
             List<RoleRepresentation> list_roles = responseRole.getBody();
-            String foundRole = "";
+            String foundRole="";
+
             if (list_roles != null) {
                 for (String priorityRole : rolePriority) {
                     for (RoleRepresentation role : list_roles) {
@@ -241,7 +240,6 @@ public class UtilisateurService {
 
         return customUserRepresentationWithRolesList;
     }
-    //==========================
 
     /**
      * Récupère un utilisateur spécifique à partir de son identifiant dans Keycloak.

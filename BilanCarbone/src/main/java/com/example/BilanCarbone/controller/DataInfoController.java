@@ -127,13 +127,52 @@ public class DataInfoController {
     }
 
     /**
-     * Récupère les données de emission.
+     * Récupère les données d'information de l'entreprise spécifiée pour la période donnée.
      *
-     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
-     * @return Une liste des sommes mensuelles d'émission.
+     * @param idEntreprise l'identifiant de l'entreprise dont on veut récupérer les données
+     * @param firstDate    la date de début de la période
+     * @param lastDate     la date de fin de la période
+     * @return une carte associant chaque date à la valeur correspondante
      */
     @GetMapping("getData")
     public Map<LocalDate,Double> getDataInfoOfEntreprise(@RequestParam Long idEntreprise,LocalDate firstDate,LocalDate lastDate){
         return dataInfoService.getDataInfoOfEntreprise(idEntreprise,firstDate,lastDate);
+    }
+    /**
+     * Récupère les données d'information de l'utilisateur spécifié pour la période donnée.
+     *
+     * @param idUtilisateur l'identifiant de l'utilisateur dont on veut récupérer les données
+     * @param firstDate     la date de début de la période
+     * @param lastDate      la date de fin de la période
+     * @return une carte associant chaque date à la valeur correspondante
+     */
+    @GetMapping("getData/user")
+    public Map<LocalDate,Double> getDataInfoOfEntreprise(@RequestParam String idUtilisateur,LocalDate firstDate,LocalDate lastDate){
+        return dataInfoService.getDataInfoOfUtilisateur(idUtilisateur,firstDate,lastDate);
+    }
+
+    /**
+     * Récupère les données d'information de l'entreprise spécifiée par type pour la période donnée.
+     *
+     * @param idEntreprise l'identifiant de l'entreprise dont on veut récupérer les données
+     * @param firstDate    la date de début de la période
+     * @param lastDate     la date de fin de la période
+     * @return une carte associant chaque type de données à la valeur correspondante
+     */
+    @GetMapping("getDataPerType")
+    public Map<String,Double> getDataInfoOfEntreprisePerType(@RequestParam Long idEntreprise,LocalDate firstDate,LocalDate lastDate){
+        return dataInfoService.getDataInfoOfEntreprisePerType(idEntreprise,firstDate,lastDate);
+    }
+    /**
+     * Récupère les données d'information de l'utilisateur spécifié par type pour la période donnée.
+     *
+     * @param idUtilisateur l'identifiant de l'utilisateur dont on veut récupérer les données
+     * @param firstDate     la date de début de la période
+     * @param lastDate      la date de fin de la période
+     * @return une carte associant chaque type de données à la valeur correspondante
+     */
+    @GetMapping("getDataPerType/user")
+    public Map<String,Double> getDataInfoOfUserPerType(@RequestParam String idUtilisateur,LocalDate firstDate,LocalDate lastDate){
+        return dataInfoService.getDataInfoOfUserPerType(idUtilisateur,firstDate,lastDate);
     }
 }
