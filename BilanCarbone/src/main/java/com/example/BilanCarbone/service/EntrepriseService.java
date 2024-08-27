@@ -6,8 +6,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EntrepriseService {
@@ -15,49 +15,45 @@ public class EntrepriseService {
     @Autowired
     private EntrepriseRepository entrepriseRepository;
 
-    // Méthode pour mettre à jour une entreprise
-    public Entreprise updateEntreprise(Long id, Entreprise entrepriseDetails) {
-        Entreprise entreprise = entrepriseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entreprise not found"));
-
-        // Vérifier les doublons avant de mettre à jour
-        if (existsByNomAndDifferentId(entrepriseDetails.getNom(), id)) {
-            throw new RuntimeException("Le nom de l'entreprise existe déjà.");
-        }
-
-        entreprise.setNom(entrepriseDetails.getNom());
-        entreprise.setAdresse(entrepriseDetails.getAdresse());
-        entreprise.setType(entrepriseDetails.getType());
-        entreprise.setBloque(entrepriseDetails.isBloque());
-
-        return entrepriseRepository.save(entreprise);
-    }
-
-    // Méthode pour récupérer toutes les entreprises
+    // Méthode pour récupérer toutes les entreprises non supprimées
     public List<Entreprise> findAll() {
-        return entrepriseRepository.findAll();
+        return entrepriseRepository.findByIsDeletedIsNull();
     }
 
-    // Méthode pour récupérer une entreprise par son ID
+    // Méthode pour récupérer toutes les entreprises supprimées
+    public List<Entreprise> findAllDeleted() {
+        return entrepriseRepository.findByIsDeletedIsNotNull();
+    }
+
+    // Méthode pour récupérer une entreprise non supprimée par ID
     public Entreprise findById(Long id) {
-        return entrepriseRepository.findById(id).orElseThrow(() -> {
-            throw new EntityNotFoundException("entreprise not found with id: " + id);
-        });
+        return entrepriseRepository.findByIdAndIsDeletedIsNull(id)
+                .orElseThrow(() -> new EntityNotFoundException("Entreprise not found with id: " + id));
     }
 
     // Méthode pour sauvegarder une nouvelle entreprise
     public Entreprise save(Entreprise entreprise) {
-        // Vérifier les doublons avant de sauvegarder
         if (existsByNom(entreprise.getNom())) {
             throw new RuntimeException("Le nom de l'entreprise existe déjà.");
         }
-
+        entreprise.setIsDeleted(null); // Assurez-vous que l'entreprise n'est pas marquée comme supprimée
         return entrepriseRepository.save(entreprise);
     }
 
-    // Méthode pour supprimer une entreprise par son ID
+    // Méthode pour marquer une entreprise comme supprimée (soft delete)
     public void deleteById(Long id) {
-        entrepriseRepository.deleteById(id);
+        Entreprise entreprise = entrepriseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Entreprise not found"));
+        entreprise.setIsDeleted(LocalDateTime.now());
+        entrepriseRepository.save(entreprise);
+    }
+
+    // Méthode pour restaurer une entreprise supprimée
+    public void restoreById(Long id) {
+        Entreprise entreprise = entrepriseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Entreprise not found"));
+        entreprise.setIsDeleted(null);  // Remettre à null pour restaurer l'entreprise
+        entrepriseRepository.save(entreprise);
     }
 
     // Méthode pour mettre à jour le statut (bloqué ou débloqué) d'une entreprise
@@ -69,12 +65,12 @@ public class EntrepriseService {
         return entrepriseRepository.save(entreprise);
     }
 
-    // Vérifie si une entreprise avec le même nom et un ID différent existe déjà
+    // Méthode pour vérifier l'existence par nom et un ID différent
     public boolean existsByNomAndDifferentId(String nom, Long id) {
         return entrepriseRepository.existsByNomAndIdNot(nom, id);
     }
 
-    // Vérifie si une entreprise avec le même nom existe déjà
+    // Méthode pour vérifier l'existence par nom
     public boolean existsByNom(String nom) {
         return entrepriseRepository.existsByNom(nom);
     }

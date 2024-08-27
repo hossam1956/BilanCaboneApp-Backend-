@@ -3,8 +3,9 @@ package com.example.BilanCarbone.entity;
 import com.example.BilanCarbone.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -21,8 +22,9 @@ public class Entreprise extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private EntrepriseType type;
 
+    private LocalDateTime isDeleted = null;  // Utilisation de LocalDateTime pour le soft delete
 
-    // Getters et setters
+    // Getters et setters pour les autres champs
 
     public String getNom() {
         return nom;
@@ -54,5 +56,14 @@ public class Entreprise extends BaseEntity {
 
     public void setBloque(boolean bloque) {
         this.bloque = bloque;
+    }
+
+    // Getter et Setter pour isDeleted
+    public LocalDateTime getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(LocalDateTime isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }
