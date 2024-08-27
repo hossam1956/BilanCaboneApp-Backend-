@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,9 +22,6 @@ public class Entreprise extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private EntrepriseType type;
-
-    private LocalDateTime isDeleted = null;  // Utilisation de LocalDateTime pour le soft delete
-
 
     // Getters et setters pour les autres champs
 
@@ -60,12 +58,4 @@ public class Entreprise extends BaseEntity {
         this.bloque = bloque;
     }
 
-    // Getter et Setter pour isDeleted
-    public LocalDateTime getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(LocalDateTime isDeleted) {
-        this.isDeleted = isDeleted;
-    }
 }
