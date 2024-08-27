@@ -31,6 +31,7 @@ public class Entreprise extends BaseEntity {
         return nom;
     }
 
+
     public void setNom(String nom) {
         this.nom = nom;
     }
