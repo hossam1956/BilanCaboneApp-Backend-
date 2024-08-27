@@ -13,7 +13,6 @@ import com.example.BilanCarbone.jpa.UtilisateurRepository;
 import com.example.BilanCarbone.mapper.TypeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
  * @author Oussama
  */
 @Service
-@RequiredArgsConstructor
 public class TypeServiceimplement implements TypeService {
     private final TypeRepository typeRepository;
     private final TypeMapper typeMapper;
@@ -42,8 +40,17 @@ public class TypeServiceimplement implements TypeService {
     private final Userget userclaim;
     private final UtilisateurRepository userRepository;
 
+    public TypeServiceimplement(TypeRepository typeRepository, TypeMapper typeMapper, FacteurRepository facteurRepository, FacteurService facteurService, Userget userclaim, UtilisateurRepository userRepository) {
+        this.typeRepository = typeRepository;
+        this.typeMapper = typeMapper;
+        this.facteurRepository = facteurRepository;
+        this.facteurService = facteurService;
+        this.userclaim = userclaim;
+        this.userRepository = userRepository;
+    }
+
     @Override
-    public PageResponse<TypeResponse> list_parent(int page, int size,boolean my, String search, String... order) {
+    public PageResponse<TypeResponse> list_parent(int page, int size, boolean my, String search, String... order) {
         Page<Type> respage = pagesorted(page, size, my, search, order);
         return getTypeResponsePageResponse(respage);
     }
@@ -59,13 +66,13 @@ public class TypeServiceimplement implements TypeService {
         String trimmedSearch = search.toLowerCase().trim();
 
 
-        if(entreprise!=null){
+        if (entreprise != null) {
             respage = (!isSearchEmpty)
-                    ? typeRepository.findAllByNameContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(trimmedSearch,entreprise,pageable)
-                    : typeRepository.findAllByEntrepriseAndIsDeletedIsNull(entreprise,pageable);
-        }else {
+                    ? typeRepository.findAllByNameContainingIgnoreCaseAndEntrepriseAndIsDeletedIsNull(trimmedSearch, entreprise, pageable)
+                    : typeRepository.findAllByEntrepriseAndIsDeletedIsNull(entreprise, pageable);
+        } else {
             respage = (!isSearchEmpty)
-                    ? typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(trimmedSearch,pageable)
+                    ? typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNullAndEntrepriseIsNull(trimmedSearch, pageable)
                     : typeRepository.findAllByIsDeletedIsNullAndEntrepriseIsNull(pageable);
         }
         return getTypeResponsePageResponse(respage);
@@ -73,9 +80,9 @@ public class TypeServiceimplement implements TypeService {
 
     @Override
     public PageResponse<TypeResponse> list_all_detail(int page, int size, boolean my, String search, String... order) {
-        Page<Type> respage = pagesorted(page, size,my, search, order);
+        Page<Type> respage = pagesorted(page, size, my, search, order);
         List<Type> child = typeRepository.findAllByParentIsNotNullAndIsDeletedIsNull();
-        List<TypeResponse> list = typeMapper.hierarchiqueResponse(respage.stream().toList(), child,false);
+        List<TypeResponse> list = typeMapper.hierarchiqueResponse(respage.stream().toList(), child, false);
         return PageResponse.<TypeResponse>builder()
                 .content(list)
                 .number(respage.getNumber())
@@ -84,33 +91,34 @@ public class TypeServiceimplement implements TypeService {
                 .totalPages(respage.getTotalPages())
                 .first(respage.isFirst())
                 .last(respage.isLast())
-                .build();    }
+                .build();
+    }
 
     @Override
     public TypeResponse get_type(Long id) {
-        return typeMapper.typeParentResponse_with_date_and_parent(findbyid(id,false));
+        return typeMapper.typeParentResponse_with_date_and_parent(findbyid(id, false));
     }
 
     @Override
     public TypeResponse get_type_detail(Long id) {
-        Type res = findbyid(id,false);
+        Type res = findbyid(id, false);
         List<Type> list = typeRepository.findAllByParentAndIsDeletedIsNull(res);
         for (Type t : list) {
-            List<Facteur> facteurs=facteurRepository.findAllByTypeAndIsDeletedIsNull(t);
+            List<Facteur> facteurs = facteurRepository.findAllByTypeAndIsDeletedIsNull(t);
             t.setFacteurs(facteurs);
         }
         if (!list.isEmpty()) {
-            return typeMapper.typeParentResponse(res, list,true);
+            return typeMapper.typeParentResponse(res, list, true);
         }
-        List<Facteur> facteurs=facteurRepository.findAllByTypeAndIsDeletedIsNull(res);
+        List<Facteur> facteurs = facteurRepository.findAllByTypeAndIsDeletedIsNull(res);
         res.setFacteurs(facteurs);
         return typeMapper.typeParentResponse_with_facteur(res);
     }
 
     @Override
     public TypeResponse get_type_all(Long id) {
-        Type res = findbyid(id,false);
-        Entreprise entreprise=check_user_permission_and_get_entreprise(false);
+        Type res = findbyid(id, false);
+        Entreprise entreprise = check_user_permission_and_get_entreprise(false);
         if (res.getParent() != null) {
             res = res.getParent();
         }
@@ -121,20 +129,21 @@ public class TypeServiceimplement implements TypeService {
                     .collect(Collectors.toList()));
         }
         if (!list.isEmpty()) {
-            return typeMapper.typeParentResponse(res, list,true);
+            return typeMapper.typeParentResponse(res, list, true);
         }
         res.setFacteurs(res.getFacteurs().stream()
                 .filter(f -> f.getIsDeleted() == null)
                 .collect(Collectors.toList()));
         return typeMapper.typeParentResponse_with_facteur(res);
     }
+
     @Override
     public List<TypeResponse> list_type() {
         Entreprise entreprise = this.check_user_permission_and_get_entreprise(false);
         List<Type> list = typeRepository.findAllByActiveIsTrueAndIsDeletedIsNullAndEntrepriseOrEntrepriseIsNull(entreprise);
 
         List<Type> child = typeRepository.findAllByParentIsNotNullAndIsDeletedIsNullAndEntrepriseOrEntrepriseIsNull(entreprise);
-        return typeMapper.hierarchiqueResponse(list, child,true);
+        return typeMapper.hierarchiqueResponse(list, child, true);
     }
 
     public Boolean search_type(String search, int id) {
@@ -157,16 +166,16 @@ public class TypeServiceimplement implements TypeService {
     public PageResponse<TypeResponse> list_all_detail_trash(int page, int size, String search, String... order) {
         Sort sort = Sort.by(Sort.Direction.ASC, order.length > 0 ? order : new String[]{"createdDate"});
         Pageable pageable = PageRequest.of(page, size, sort);
-        Entreprise entreprise=this.check_owner_entreprise();
+        Entreprise entreprise = this.check_owner_entreprise();
         boolean isSearchEmpty = search.isEmpty();
         String trimmedSearch = search.toLowerCase().trim();
         Page<Type> respage = null;
         if (entreprise != null) {
-            respage= isSearchEmpty ?
-                    typeRepository.findAllByIsDeletedNotNullAndEntreprise( pageable,entreprise) :
-                    typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNotNullAndEntreprise(trimmedSearch, pageable,entreprise);
+            respage = isSearchEmpty ?
+                    typeRepository.findAllByIsDeletedNotNullAndEntreprise(pageable, entreprise) :
+                    typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNotNullAndEntreprise(trimmedSearch, pageable, entreprise);
         } else {
-            respage= isSearchEmpty ?
+            respage = isSearchEmpty ?
                     typeRepository.findAllByIsDeletedNotNullAndEntrepriseIsNull(pageable) :
                     typeRepository.findAllByNameContainingIgnoreCaseAndIsDeletedIsNotNullAndEntrepriseIsNull(trimmedSearch, pageable);
         }
@@ -175,7 +184,7 @@ public class TypeServiceimplement implements TypeService {
 
     @Override
     public TypeResponse activate_type(Long id) {
-        Type type = findbyid(id,true);
+        Type type = findbyid(id, true);
         if (type.getActive()) {
             throw new OperationNotPermittedException("Le type " + id + " a déjà été activé");
         }
@@ -186,7 +195,7 @@ public class TypeServiceimplement implements TypeService {
 
     @Override
     public TypeResponse toggle_type_detail(Long id, boolean active) {
-        Type type = findbyid(id,true);
+        Type type = findbyid(id, true);
         Type re = toggleTypeAndChildren(type, active);
         return this.get_type_all(re.getId());
     }
@@ -233,9 +242,6 @@ public class TypeServiceimplement implements TypeService {
     }
 
 
-
-
-
     private void deleteTypeAndChildren(Type type) {
         if (type.getFacteurs() != null) {
             // Collect factors to remove
@@ -257,12 +263,8 @@ public class TypeServiceimplement implements TypeService {
     }
 
 
-
-
-
-
     private Type updateType(Long typeId, TypeRequest request, Type parent) {
-        Type type = findbyid(typeId,true);
+        Type type = findbyid(typeId, true);
         if (request.nom_type() != null && !request.nom_type().equals(type.getName())) {
             type.setName(request.nom_type());
         }
@@ -290,7 +292,7 @@ public class TypeServiceimplement implements TypeService {
             }
             for (FacteurRequest i : request.facteurs()) {
                 if (i.id() != null) {
-                    facteurService.update(i.id(), i,type,true);
+                    facteurService.update(i.id(), i, type, true);
                 } else {
                     facteurService.addFacteur(i, type);
                 }
@@ -316,7 +318,7 @@ public class TypeServiceimplement implements TypeService {
                 if (childRequest.id() != null) {
                     updateType(childRequest.id(), childRequest, type);
                 } else {
-                    add_type(childRequest, type,null);
+                    add_type(childRequest, type, null);
                 }
             }
         }
@@ -327,6 +329,7 @@ public class TypeServiceimplement implements TypeService {
 
         return type;
     }
+
     private void deactivateChildrenAndFacteurs(Type type) {
         if (type.getFacteurs() != null) {
             for (Facteur facteur : type.getFacteurs()) {
@@ -386,7 +389,7 @@ public class TypeServiceimplement implements TypeService {
         Type res = find_deleted_byid(id);
         List<Type> list = typeRepository.findAllByParentAndIsDeletedNotNull(res);
         if (!list.isEmpty()) {
-            return typeMapper.typeParentResponse(res, list,true);
+            return typeMapper.typeParentResponse(res, list, true);
         }
         return typeMapper.typeParentResponse(res);
     }
@@ -394,7 +397,7 @@ public class TypeServiceimplement implements TypeService {
     private Type toggle_delete(Long id, Boolean deleted) {
         Type type;
         if (deleted) {
-            type = findbyid(id,true);
+            type = findbyid(id, true);
             if (type.getIsDeleted() != null) {
                 throw new OperationNotPermittedException("Le type " + type.getId() + " est supprimé");
             }
@@ -443,7 +446,7 @@ public class TypeServiceimplement implements TypeService {
         return depth;
     }
 
-    private Type add_type(TypeRequest request, Type parent,Entreprise entreprise) {
+    private Type add_type(TypeRequest request, Type parent, Entreprise entreprise) {
         Type type = typeRepository.findByNameAndIsDeletedIsNull(request.nom_type());
         if (type != null) {
             throw new OperationNotPermittedException("type avec nom " + type.getName() + " deja exists.");
@@ -475,7 +478,7 @@ public class TypeServiceimplement implements TypeService {
         }
         if (request.types() != null && !request.types().isEmpty()) {
             for (TypeRequest childRequest : request.types()) {
-                add_type(childRequest, type,entreprise);
+                add_type(childRequest, type, entreprise);
             }
         }
         return type;
@@ -493,6 +496,7 @@ public class TypeServiceimplement implements TypeService {
                 .last(respage.isLast())
                 .build();
     }
+
     private List<Sort.Order> buildSortOrders(String... sortBy) {
         List<Sort.Order> orders = new ArrayList<>();
         for (int i = 0; i < sortBy.length; i++) {
@@ -506,35 +510,39 @@ public class TypeServiceimplement implements TypeService {
         orders.add(new Sort.Order(Sort.Direction.ASC, "id"));
         return orders;
     }
-    private Page<Type> pagesorted(int page, int size,boolean my, String search, String[] sortBy) {
+
+    private Page<Type> pagesorted(int page, int size, boolean my, String search, String[] sortBy) {
         List<Sort.Order> orders = this.buildSortOrders(sortBy);
         Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
         Page<Type> respage = null;
         Entreprise entreprise = my ? check_user_permission_and_get_entreprise(false) : null;
         boolean isSearchEmpty = search.isEmpty();
         String trimmedSearch = search.toLowerCase().trim();
-        if(entreprise!=null){
+        if (entreprise != null) {
             respage = (!isSearchEmpty)
-                    ? typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndEntrepriseAndIsDeletedIsNull(trimmedSearch,entreprise,pageable)
-                    : typeRepository.findAllByParentIsNullAndEntrepriseAndIsDeletedIsNull(entreprise,pageable);
-        }else {
+                    ? typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndEntrepriseAndIsDeletedIsNull(trimmedSearch, entreprise, pageable)
+                    : typeRepository.findAllByParentIsNullAndEntrepriseAndIsDeletedIsNull(entreprise, pageable);
+        } else {
             respage = (!isSearchEmpty)
                     ? typeRepository.findAllByNameContainingIgnoreCaseAndParentIsNullAndIsDeletedIsNullAndEntrepriseIsNull(trimmedSearch, pageable)
                     : typeRepository.findAllByParentIsNullAndIsDeletedIsNullAndEntrepriseIsNull(pageable);
         }
         return respage;
     }
-    private Type findbyid(Long id,boolean permision) {
-        return this.find_type_byid(id,false,permision);
+
+    private Type findbyid(Long id, boolean permision) {
+        return this.find_type_byid(id, false, permision);
     }
+
     private Type find_deleted_byid(Long id) {
-        return this.find_type_byid(id,true,true);
+        return this.find_type_byid(id, true, true);
     }
-    private Type find_type_byid(Long id,boolean is_deleted,boolean permision) {
+
+    private Type find_type_byid(Long id, boolean is_deleted, boolean permision) {
         Type t;
         if (is_deleted) {
             t = typeRepository.findByIdAndIsDeletedIsNotNull(id);
-        }else{
+        } else {
             t = typeRepository.findByIdAndIsDeletedIsNull(id);
         }
         if (t == null) {
@@ -547,6 +555,7 @@ public class TypeServiceimplement implements TypeService {
         return t;
 
     }
+
     private boolean check_owner(Type res, boolean permission) {
         Entreprise entreprise = check_user_permission_and_get_entreprise(permission);
         if (entreprise != null && res.getEntreprise() != null) {
