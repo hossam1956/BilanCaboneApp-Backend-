@@ -24,6 +24,7 @@ public class Entreprise extends BaseEntity {
 
     private LocalDateTime isDeleted = null;  // Utilisation de LocalDateTime pour le soft delete
 
+
     // Getters et setters pour les autres champs
 
     public String getNom() {
