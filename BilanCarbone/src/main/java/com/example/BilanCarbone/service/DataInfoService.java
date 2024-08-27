@@ -1,10 +1,7 @@
 package com.example.BilanCarbone.service;
 
 import com.example.BilanCarbone.dto.DataInfoRequest;
-import com.example.BilanCarbone.entity.DataInfo;
-import com.example.BilanCarbone.entity.Entreprise;
-import com.example.BilanCarbone.entity.Facteur;
-import com.example.BilanCarbone.entity.Utilisateur;
+import com.example.BilanCarbone.entity.*;
 import com.example.BilanCarbone.jpa.DataInfoRepository;
 import com.example.BilanCarbone.jpa.EntrepriseRepository;
 import com.example.BilanCarbone.jpa.FacteurRepository;
@@ -223,4 +220,132 @@ public class DataInfoService {
         }
 
     }
+
+
+
+    /**
+     * Récupère les données d'information de l'entreprise spécifiée par type pour la période donnée.
+     *
+     * @param idEntreprise l'identifiant de l'entreprise dont on veut récupérer les données
+     * @param firstDate    la date de début de la période
+     * @param lastDate     la date de fin de la période
+     * @return une carte associant chaque type de données à la valeur d'émission correspondante
+     * @throws RuntimeException si l'entreprise n'est pas trouvée
+     */
+    public Map<String,Double> getDataInfoOfEntreprisePerType(Long idEntreprise,LocalDate firstDate,LocalDate lastDate){
+        Optional<Entreprise> entreprise=entrepriseRepository.findById(idEntreprise);
+        if (entreprise.isPresent()) {
+            List<DataInfo> dataInfos = dataInfoRepository.findAllByEntreprise(entreprise.get());
+
+            LocalDate today = LocalDate.now();
+            if (lastDate.isAfter(today)) {
+                lastDate = today;
+            }
+            LocalDate finalLastDate = lastDate;
+            Map<String, Double> emissionSum = dataInfos.stream()
+                    .filter(dataInfo -> !dataInfo.getDate().isBefore(firstDate) && !dataInfo.getDate().isAfter(finalLastDate))
+                    .collect(Collectors.groupingBy(
+                            dataInfo -> {
+                                Facteur facteur = facteurRepository.findById(dataInfo.getIdFacteur()).orElseThrow(() -> new RuntimeException("Facteur not found with ID: " + dataInfo.getIdFacteur()));
+                                Type parentType = facteur.getType().getParent() != null ? facteur.getType().getParent() : facteur.getType();
+                                return parentType.getName();
+                            },
+                            Collectors.summingDouble(DataInfo::getEmission)
+                    ));
+
+
+
+
+            return emissionSum;
+
+
+        } else {
+            throw new RuntimeException("Entreprise not found with ID: " + idEntreprise);
+        }
+
+    }
+    /**
+     * Récupère les données d'information de l'utilisateur spécifié pour la période donnée.
+     *
+     * @param idUtilisateur l'identifiant de l'utilisateur dont on veut récupérer les données
+     * @param firstDate     la date de début de la période
+     * @param lastDate      la date de fin de la période
+     * @return une carte associant chaque date à la valeur d'émission correspondante
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé
+     */
+    public Map<LocalDate,Double> getDataInfoOfUtilisateur(String idUtilisateur,LocalDate firstDate,LocalDate lastDate){
+      try{
+          List<DataInfo> dataInfos = dataInfoRepository.findAllByIdUtilisateur(idUtilisateur);
+
+          LocalDate today = LocalDate.now();
+          if (lastDate.isAfter(today)) {
+              lastDate = today;
+          }
+          LocalDate finalLastDate = lastDate;
+          Map<LocalDate, Double> emissionSum = dataInfos.stream()
+                  .filter(dataInfo -> !dataInfo.getDate().isBefore(firstDate) && !dataInfo.getDate().isAfter(finalLastDate))
+                  .collect(Collectors.groupingBy(
+                          DataInfo::getDate,
+                          Collectors.summingDouble(DataInfo::getEmission)
+                  ));
+
+          return emissionSum.entrySet().stream()
+                  .sorted(Map.Entry.comparingByKey())
+                  .collect(Collectors.toMap(
+                          Map.Entry::getKey,
+                          Map.Entry::getValue,
+                          (e1, e2) -> e1,
+                          LinkedHashMap::new
+                  ));
+      }
+
+        catch(RuntimeException e) {
+            throw new RuntimeException("Utilisateur not found with ID: " + idUtilisateur +"cause : "+e);
+        }
+
+    }
+
+    /**
+     * Récupère les données d'information de l'utilisateur spécifié par type pour la période donnée.
+     *
+     * @param idUtilisateur l'identifiant de l'utilisateur dont on veut récupérer les données
+     * @param firstDate     la date de début de la période
+     * @param lastDate      la date de fin de la période
+     * @return une carte associant chaque type de données à la valeur d'émission correspondante
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé
+     */
+    public Map<String,Double> getDataInfoOfUserPerType(String idUtilisateur,LocalDate firstDate,LocalDate lastDate){
+       try{
+
+            List<DataInfo> dataInfos = dataInfoRepository.findAllByIdUtilisateur(idUtilisateur);
+            LocalDate today = LocalDate.now();
+            if (lastDate.isAfter(today)) {
+                lastDate = today;
+            }
+            LocalDate finalLastDate = lastDate;
+            Map<String, Double> emissionSum = dataInfos.stream()
+                    .filter(dataInfo -> !dataInfo.getDate().isBefore(firstDate) && !dataInfo.getDate().isAfter(finalLastDate))
+                    .collect(Collectors.groupingBy(
+                            dataInfo -> {
+                                Facteur facteur = facteurRepository.findById(dataInfo.getIdFacteur()).orElseThrow(() -> new RuntimeException("Facteur not found with ID: " + dataInfo.getIdFacteur()));
+                                Type parentType = facteur.getType().getParent() != null ? facteur.getType().getParent() : facteur.getType();
+                                return parentType.getName();
+                            },
+                            Collectors.summingDouble(DataInfo::getEmission)
+                    ));
+
+
+
+
+            return emissionSum;
+
+
+        } catch (RuntimeException e){
+            throw new RuntimeException("Utilisateur not found with ID: " + idUtilisateur +"cause : "+e);
+        }
+
+    }
+
+
+
 }
