@@ -1,7 +1,10 @@
 package com.example.BilanCarbone.entity;
 
 import com.example.BilanCarbone.common.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 import java.util.List;
 
@@ -44,14 +47,20 @@ public class Type extends BaseEntity {
      * Les facteurs sont liés à ce type et sont automatiquement supprimés si ce type est supprimé (cascade de suppression).
      * </p>
      */
-    @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany
     private List<Facteur> facteurs;
 
-    public Type(String name, Type parent, Boolean active, List<Facteur> facteurs) {
+
+    @ManyToOne
+    @JoinColumn(name = "entreprise_id")
+    private Entreprise entreprise;
+
+    public Type(String name, Type parent, Boolean active, List<Facteur> facteurs, Entreprise entreprise) {
         this.name = name;
         this.parent = parent;
         this.active = active;
         this.facteurs = facteurs;
+        this.entreprise = entreprise;
     }
 
     public Type() {
@@ -63,6 +72,7 @@ public class Type extends BaseEntity {
         this.parent = b.parent;
         this.active = b.active;
         this.facteurs = b.facteurs;
+        this.entreprise = b.entreprise;
     }
 
     public static TypeBuilder<?, ?> builder() {
@@ -85,6 +95,10 @@ public class Type extends BaseEntity {
         return this.facteurs;
     }
 
+    public Entreprise getEntreprise() {
+        return this.entreprise;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -99,6 +113,10 @@ public class Type extends BaseEntity {
 
     public void setFacteurs(List<Facteur> facteurs) {
         this.facteurs = facteurs;
+    }
+
+    public void setEntreprise(Entreprise entreprise) {
+        this.entreprise = entreprise;
     }
 
     public boolean equals(final Object o) {
@@ -118,6 +136,10 @@ public class Type extends BaseEntity {
         final Object this$facteurs = this.getFacteurs();
         final Object other$facteurs = other.getFacteurs();
         if (this$facteurs == null ? other$facteurs != null : !this$facteurs.equals(other$facteurs)) return false;
+        final Object this$entreprise = this.getEntreprise();
+        final Object other$entreprise = other.getEntreprise();
+        if (this$entreprise == null ? other$entreprise != null : !this$entreprise.equals(other$entreprise))
+            return false;
         return true;
     }
 
@@ -136,11 +158,13 @@ public class Type extends BaseEntity {
         result = result * PRIME + ($active == null ? 43 : $active.hashCode());
         final Object $facteurs = this.getFacteurs();
         result = result * PRIME + ($facteurs == null ? 43 : $facteurs.hashCode());
+        final Object $entreprise = this.getEntreprise();
+        result = result * PRIME + ($entreprise == null ? 43 : $entreprise.hashCode());
         return result;
     }
 
     public String toString() {
-        return "Type(name=" + this.getName() + ", parent=" + this.getParent() + ", active=" + this.getActive() + ", facteurs=" + this.getFacteurs() + ")";
+        return "Type(name=" + this.getName() + ", parent=" + this.getParent() + ", active=" + this.getActive() + ", facteurs=" + this.getFacteurs() + ", entreprise=" + this.getEntreprise() + ")";
     }
 
     public static abstract class TypeBuilder<C extends Type, B extends TypeBuilder<C, B>> extends BaseEntityBuilder<C, B> {
@@ -148,6 +172,7 @@ public class Type extends BaseEntity {
         private Type parent;
         private Boolean active;
         private List<Facteur> facteurs;
+        private Entreprise entreprise;
 
         public B name(String name) {
             this.name = name;
@@ -169,12 +194,17 @@ public class Type extends BaseEntity {
             return self();
         }
 
+        public B entreprise(Entreprise entreprise) {
+            this.entreprise = entreprise;
+            return self();
+        }
+
         protected abstract B self();
 
         public abstract C build();
 
         public String toString() {
-            return "Type.TypeBuilder(super=" + super.toString() + ", name=" + this.name + ", parent=" + this.parent + ", active=" + this.active + ", facteurs=" + this.facteurs + ")";
+            return "Type.TypeBuilder(super=" + super.toString() + ", name=" + this.name + ", parent=" + this.parent + ", active=" + this.active + ", facteurs=" + this.facteurs + ", entreprise=" + this.entreprise + ")";
         }
     }
 

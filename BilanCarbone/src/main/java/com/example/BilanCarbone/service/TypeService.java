@@ -10,9 +10,9 @@ import java.util.List;
  * @author Oussama
  **/
 public interface TypeService {
-    PageResponse<TypeResponse> list_parent(int page , int size , String search,String... order);
-    PageResponse<TypeResponse> list_all(int page , int size , String search,String... order);
-    PageResponse<TypeResponse> list_all_detail(int page , int size , String search,String... order);
+    PageResponse<TypeResponse> list_parent(int page , int size,boolean my , String search,String... order);
+    PageResponse<TypeResponse> list_all(int page , int size,boolean my , String search,String... order);
+    PageResponse<TypeResponse> list_all_detail(int page , int size,boolean my , String search,String... order);
     TypeResponse get_type(Long id);
     TypeResponse get_type_detail(Long id);
     TypeResponse get_type_all(Long id);
@@ -24,5 +24,6 @@ public interface TypeService {
     TypeResponse delete_type_detail(Long id);
     TypeResponse force_delete_type(Long id);
     TypeResponse recovery_delete_all(Long id);
+    Boolean search_type(String search,int id);
     PageResponse<TypeResponse> list_all_detail_trash(int page , int size , String search,String... order);
 }

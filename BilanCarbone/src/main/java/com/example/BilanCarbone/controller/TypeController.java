@@ -16,7 +16,7 @@ import java.util.List;
  * Contrôleur REST pour gérer les opérations liées aux types.
  * <p>
  * Cette classe expose les endpoints nécessaires pour effectuer des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer)
- * sur les objets de type {@link Type}. Elle fournit également des fonctionnalités pour activer, désactiver, et gérer les types
+ * sur les objets de type {@link  -Type}. Elle fournit également des fonctionnalités pour activer, désactiver, et gérer les types
  * dans la corbeille.
  * </p>
  *
@@ -41,6 +41,7 @@ public class TypeController {
      * @param sortBy Critères de tri des résultats.
      * @param parent Indicateur pour filtrer uniquement les types parents (false par défaut).
      * @param detail Indicateur pour obtenir des détails supplémentaires sur les types (false par défaut).
+     * @param my Indicateur pour obtenir les types personnalisé (false par défaut).
      * @return Une réponse contenant la page de types correspondant aux critères spécifiés.
      */
     @GetMapping()
@@ -48,15 +49,16 @@ public class TypeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy,
+            @RequestParam(defaultValue = "") String[] sortBy,
             @RequestParam(defaultValue = "false") Boolean parent,
+            @RequestParam(defaultValue = "false") Boolean my,
             @RequestParam(defaultValue = "false") Boolean detail) {
         if (parent) {
-            return ResponseEntity.ok(typeService.list_parent(page, size, search, sortBy));
+            return ResponseEntity.ok(typeService.list_parent(page, size,my, search, sortBy));
         } else if (detail) {
-            return ResponseEntity.ok(typeService.list_all_detail(page, size, search, sortBy));
+            return ResponseEntity.ok(typeService.list_all_detail(page, size,my, search, sortBy));
         }
-        return ResponseEntity.ok(typeService.list_all(page, size, search, sortBy));
+        return ResponseEntity.ok(typeService.list_all(page, size,my, search, sortBy));
     }
 
     /**
@@ -177,7 +179,7 @@ public class TypeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "createdDate") String[] sortBy) {
+            @RequestParam(defaultValue = "") String[] sortBy) {
         return ResponseEntity.ok(typeService.list_all_detail_trash(page, size, search, sortBy));
     }
 
@@ -190,6 +192,21 @@ public class TypeController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TypeResponse> update_type(@PathVariable Long id, @RequestBody TypeRequest typeRequest) {
+
         return ResponseEntity.ok(typeService.update_type_detail(id, typeRequest));
+    }
+    /**
+     *  chercher d'un type spécifique par son nom
+     *
+     * @param search le nom de type
+     * @return Une réponse contenant True si existe ou false si n'esxit pas
+     * */
+    @GetMapping("/search")
+    public ResponseEntity<Boolean> search(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int id) {
+        Boolean res=typeService.search_type(search,id);
+
+        return ResponseEntity.ok(res);
     }
 }
