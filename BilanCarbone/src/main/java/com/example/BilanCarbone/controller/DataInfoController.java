@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrôleur REST pour gérer les opérations liées aux objets DataInfo.
@@ -22,7 +23,7 @@ public class DataInfoController {
 
     @Autowired
     private DataInfoService dataInfoService;
-
+    @Autowired
     private DataInfoRepository dataInfoRepository;
 
     /**
@@ -90,6 +91,15 @@ public class DataInfoController {
     public void viderDataInfoController(){
         dataInfoRepository.deleteAll();
     }
+    /**
+     * Endpoint pour supprimer tous les DataInfo associés à un facteur spécifique.
+     *
+     * @param IdFacteur L'ID du facteur.
+     */
+    @DeleteMapping("facteur")
+    public void deleteDataByIdFateur(@RequestParam Long IdFacteur){
+        dataInfoService.deleteDataByIdFateur(IdFacteur);
+    }
 
     /**
      * Endpoint pour supprimer un DataInfo spécifique basé sur l'ID du Facteur, l'ID de l'utilisateur, et la date.
@@ -103,5 +113,27 @@ public class DataInfoController {
                                           @RequestParam String IdUtilisateur,
                                           @RequestParam LocalDate date) {
         dataInfoService.uncheckFacteur(IdFacteur, IdUtilisateur, date);
+    }
+
+    /**
+     * Récupère les dates distinctes pour un utilisateur donné.
+     *
+     * @param IdUtilisateur L'identifiant de l'utilisateur pour lequel récupérer les dates.
+     * @return Une liste de dates distinctes.
+     */
+    @GetMapping("dates")
+    public List<LocalDate> getExistantDates(@RequestParam String IdUtilisateur){
+        return dataInfoRepository.findDistinctDatesByIdUtilisateur(IdUtilisateur);
+    }
+
+    /**
+     * Récupère les données de emission.
+     *
+     * @param idEntreprise L'identifiant de l'entreprise pour laquelle récupérer les données.
+     * @return Une liste des sommes mensuelles d'émission.
+     */
+    @GetMapping("getData")
+    public Map<LocalDate,Double> getDataInfoOfEntreprise(@RequestParam Long idEntreprise,LocalDate firstDate,LocalDate lastDate){
+        return dataInfoService.getDataInfoOfEntreprise(idEntreprise,firstDate,lastDate);
     }
 }

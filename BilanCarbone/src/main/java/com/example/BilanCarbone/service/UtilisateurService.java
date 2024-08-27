@@ -211,6 +211,7 @@ public class UtilisateurService {
             HttpEntity<String> httpEntityRole = new HttpEntity<>(headersRole);
             ResponseEntity<List<RoleRepresentation>> responseRole = restTemplate.exchange(
                     URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {});
+
             String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYEE"};
             List<RoleRepresentation> list_roles = responseRole.getBody();
             String foundRole="";

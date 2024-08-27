@@ -1,14 +1,12 @@
 package com.example.BilanCarbone.config;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.keycloak.representations.idm.RoleRepresentation;
 
-/**
- * @author Oussama
- **/
-@Data
+import java.util.List;
+
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
