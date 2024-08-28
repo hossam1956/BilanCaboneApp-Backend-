@@ -156,7 +156,6 @@ public class UtilisateurService {
                 .build();
     }
 
-    //==========================
     @Transactional
     public List<CustomUserRepresentationWithRole> getAllUtilisateurList(String token, Object roles, Object idUser) {
 
@@ -214,7 +213,7 @@ public class UtilisateurService {
             ResponseEntity<List<RoleRepresentation>> responseRole = restTemplate.exchange(
                     URL_GET_ROLE, HttpMethod.GET, httpEntityRole, new ParameterizedTypeReference<List<RoleRepresentation>>() {});
 
-            String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYEE"};
+            String[] rolePriority = {"MANAGER", "RESPONSABLE", "EMPLOYE"};
             List<RoleRepresentation> list_roles = responseRole.getBody();
             String foundRole="";
 

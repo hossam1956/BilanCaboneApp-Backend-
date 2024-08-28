@@ -40,12 +40,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                               // .requestMatchers("/api/utilisateur/**").hasRole("ADMIN")
-                               // .requestMatchers("/api/demande/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.PUT,"api/utilisateur").permitAll()
-                                .requestMatchers("api/utilisateur").permitAll()
-                                .requestMatchers("/api/entreprises").permitAll()
-                                .requestMatchers(HttpMethod.POST,"/api/demande").permitAll()
+                                //.requestMatchers("api/utilisateur/*").hasAnyRole("ADMIN", "ROLE_MANAGER")
+                                //.requestMatchers("api/entreprises/*").hasRole("ADMIN")
+                                //.requestMatchers(HttpMethod.POST,"api/demande/*").hasAnyRole("ADMIN", "MANAGER")
+                                //.requestMatchers(HttpMethod.GET,"api/data/*").permitAll()
                                 .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
