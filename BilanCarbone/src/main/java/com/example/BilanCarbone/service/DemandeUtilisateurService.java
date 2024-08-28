@@ -335,13 +335,13 @@ public class DemandeUtilisateurService {
                     demandeUtilisateurRepository.delete(demandeUtilisateur);
                     return true;
                 } else {
-                    return false;
+                   throw new RuntimeException("idRole or idUser is null");
                 }
             } else {
                 throw new RuntimeException("Erreur pendant la création de l'utilisateur dans Keycloak: " + response.getStatusCode());
             }
         }
-        return false;
+        throw new RuntimeException("Error In operation of acceptation");
 
     }
 
